@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>回旋斩 - BOOMERANG</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      background: #1a1a2e;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+    #gameContainer {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    #gameCanvas {
+      max-width: 100%;
+      max-height: 100%;
+      image-rendering: pixelated;
+      cursor: pointer;
+    }
+
+    /* 全屏按钮 - 作为菜单项，全屏后隐藏 */
+    .fullscreen #fullscreenBtn { display: none; }
+
+    /* 闪屏效果 */
+    #flash {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: white;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 50;
+      transition: opacity 0.15s ease-out;
+    }
+
+    /* 分数 UI */
+    #scoreUI {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 40px;
+      z-index: 10;
+      pointer-events: none;
+    }
+    .score {
+      font-size: 72px;
+      font-weight: bold;
+      text-shadow: 0 0 30px currentColor;
+      transition: transform 0.1s;
+    }
+    .score.p1 { color: #4ecdc4; }
+    .score.p2 { color: #ff6b6b; }
+    .score.pulse { transform: scale(1.2); }
+    .score-divider { font-size: 48px; color: #444; }
+
+    /* 消息提示 */
+    #message {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 80px;
+      font-weight: bold;
+      color: #fff;
+      text-shadow: 0 4px 30px rgba(0,0,0,0.8), 0 0 60px rgba(255,255,255,0.4);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 100;
+      transition: opacity 0.15s;
+    }
+    #message.show { opacity: 1; }
+
+    /* 菜单覆盖层 */
+    .overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, rgba(20,20,40,0.97), rgba(10,10,20,0.98));
+      z-index: 200;
+      transition: opacity 0.5s;
+    }
+    .overlay.hidden { opacity: 0; pointer-events: none; visibility: hidden; }
+
+    /* 开始画面 */
+    #startScreen h1 {
+      font-size: 90px;
+      font-weight: 300;
+      letter-spacing: 15px;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+    #startScreen .subtitle {
+      font-size: 14px;
+      color: #666;
+      letter-spacing: 10px;
+      margin-bottom: 50px;
+    }
+
+    /* 菜单按钮 */
+    .menu-buttons { display: flex; flex-direction: column; gap: 15px; margin-bottom: 30px; }
+    .menu-btn {
+      background: rgba(255,255,255,0.05);
+      border: 2px solid #444;
+      color: #888;
+      padding: 18px 50px;
+      font-size: 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      min-width: 250px;
+    }
+    .menu-btn:hover, .menu-btn.selected {
+      background: rgba(78,205,196,0.2);
+      border-color: #4ecdc4;
+      color: #fff;
+      transform: scale(1.05);
+    }
+    .menu-btn.selected { box-shadow: 0 0 20px rgba(78,205,196,0.4); }
+
+    /* 设置面板 */
+    .settings-panel {
+      background: rgba(0,0,0,0.3);
+      padding: 30px 40px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+    }
+    .settings-panel.hidden { display: none; }
+    .settings-panel h3 {
+      color: #fff;
+      margin-bottom: 25px;
+      font-size: 24px;
+      text-align: center;
+    }
+    .setting-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 15px;
+      color: #aaa;
+      font-size: 18px;
+      border-bottom: 1px solid #333;
+      border-radius: 6px;
+      margin: 4px 0;
+      transition: all 0.15s;
+      position: relative;
+    }
+    .setting-row.selected {
+      background: rgba(78,205,196,0.15);
+      border-color: #4ecdc4;
+      color: #fff;
+    }
+    .setting-row.selected::before {
+      content: '▶';
+      position: absolute;
+      left: -20px;
+      color: #4ecdc4;
+      animation: pointer-pulse 0.8s ease-in-out infinite;
+    }
+    @keyframes pointer-pulse {
+      0%, 100% { opacity: 1; transform: translateX(0); }
+      50% { opacity: 0.6; transform: translateX(3px); }
+    }
+    .setting-value { display: flex; align-items: center; gap: 15px; }
+    .setting-btn {
+      background: #333;
+      border: none;
+      color: #fff;
+      width: 36px;
+      height: 36px;
+      border-radius: 6px;
+      font-size: 20px;
+      cursor: pointer;
+    }
+    .setting-btn:hover { background: #4ecdc4; }
+    .setting-value span { min-width: 60px; text-align: center; color: #fff; }
+    .toggle-btn {
+      background: #333;
+      border: none;
+      color: #666;
+      padding: 8px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .toggle-btn.active { background: #4ecdc4; color: #000; }
+    .back-btn { margin-top: 20px; }
+
+    /* 提示框 */
+    .tip-box {
+      background: rgba(255,180,50,0.1);
+      border: 1px solid rgba(255,180,50,0.3);
+      padding: 15px 30px;
+      border-radius: 8px;
+      margin-bottom: 40px;
+      text-align: center;
+    }
+    .tip-box p { color: #fb4; font-size: 14px; }
+
+    .start-hint {
+      font-size: 18px;
+      color: #555;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 1; }
+    }
+
+    /* 胜利画面 */
+    #winScreen h1 { font-size: 80px; margin-bottom: 5px; }
+    #winScreen h1.p1 { color: #4ecdc4; }
+    #winScreen h1.p2 { color: #ff6b6b; }
+    .victory-subtitle { font-size: 24px; color: #ffd700; letter-spacing: 8px; margin-bottom: 20px; }
+    #winScreen .final-score { font-size: 48px; color: #fff; margin-bottom: 20px; font-weight: bold; }
+
+    /* 统计面板 */
+    .match-stats {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background: rgba(0,0,0,0.3);
+      padding: 20px 40px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+      min-width: 300px;
+    }
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 18px;
+    }
+    .stat-p1 { color: #4ecdc4; min-width: 50px; text-align: right; font-weight: bold; }
+    .stat-p2 { color: #ff6b6b; min-width: 50px; text-align: left; font-weight: bold; }
+    .stat-label { color: #666; min-width: 80px; text-align: center; }
+
+    .version { position: absolute; bottom: 20px; right: 30px; color: #444; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div id="gameContainer">
+    <canvas id="gameCanvas"></canvas>
+    <div id="flash"></div>
+    <div id="message"></div>
+
+    <!-- 开始画面 -->
+    <div class="overlay" id="startScreen">
+      <h1>回旋斩</h1>
+      <p class="subtitle">BOOMERANG</p>
+      <div class="menu-buttons" id="mainMenu">
+        <button class="menu-btn selected" data-mode="start">开始游戏</button>
+        <button class="menu-btn" data-mode="tutorial">教程</button>
+        <button class="menu-btn" data-mode="settings">设置</button>
+        <button class="menu-btn" id="fullscreenBtn">全屏模式</button>
+      </div>
+      <div class="settings-panel hidden" id="settingsPanel">
+        <h3>游戏设置</h3>
+        <div class="setting-row">
+          <span>胜利回合</span>
+          <div class="setting-value">
+            <button class="setting-btn" data-setting="rounds" data-delta="-1">-</button>
+            <span id="roundsValue">5</span>
+            <button class="setting-btn" data-setting="rounds" data-delta="1">+</button>
+          </div>
+        </div>
+        <div class="setting-row">
+          <span>AI 难度</span>
+          <div class="setting-value">
+            <button class="setting-btn" data-setting="ai" data-delta="-1">-</button>
+            <span id="aiValue">普通</span>
+            <button class="setting-btn" data-setting="ai" data-delta="1">+</button>
+          </div>
+        </div>
+        <div class="setting-row">
+          <span>音效</span>
+          <div class="setting-value">
+            <button class="toggle-btn active" id="soundToggle">开</button>
+          </div>
+        </div>
+        <div class="setting-row">
+          <span data-i18n="settings.vibration">震动</span>
+          <div class="setting-value">
+            <button class="toggle-btn active" id="vibrationToggle">开</button>
+          </div>
+        </div>
+        <div class="setting-row">
+          <span data-i18n="settings.language">语言</span>
+          <div class="setting-value">
+            <button class="setting-btn" data-setting="language" data-delta="-1">&lt;</button>
+            <span id="languageValue">中文</span>
+            <button class="setting-btn" data-setting="language" data-delta="1">&gt;</button>
+          </div>
+        </div>
+        <button class="menu-btn back-btn" id="backToMenu" data-i18n="settings.back">返回</button>
+      </div>
+      <div class="tip-box">
+        <p>一击必杀 · 回旋镖也能伤到自己！</p>
+      </div>
+      <p class="start-hint">用摇杆选择，按任意按钮确认</p>
+      <p class="version">v2.0 - You Engine</p>
+    </div>
+
+    <!-- 角色选择画面 (由 Canvas 渲染，这里只是占位) -->
+    <div class="overlay hidden" id="characterSelectScreen"></div>
+
+    <!-- 暂停画面 -->
+    <div class="overlay hidden" id="pauseScreen">
+      <h1 style="color:#fff;font-size:60px;margin-bottom:30px;">暂停</h1>
+      <div class="menu-buttons" id="pauseMenu">
+        <button class="menu-btn selected" data-action="resume">继续游戏</button>
+        <button class="menu-btn" data-action="restart">重新开始</button>
+        <button class="menu-btn" data-action="mainmenu">返回主菜单</button>
+      </div>
+      <p class="start-hint">按 + 键继续</p>
+    </div>
+
+    <!-- 胜利画面 -->
+    <div class="overlay hidden" id="winScreen">
+      <h1 id="winnerText">PLAYER 1</h1>
+      <p class="victory-subtitle">VICTORY!</p>
+      <div class="final-score" id="finalScore">5 : 2</div>
+      <div class="match-stats" id="matchStats">
+        <div class="stat-row">
+          <span class="stat-p1">0</span>
+          <span class="stat-label">击杀</span>
+          <span class="stat-p2">0</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-p1">0</span>
+          <span class="stat-label">投掷</span>
+          <span class="stat-p2">0</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-p1">0</span>
+          <span class="stat-label">冲刺</span>
+          <span class="stat-p2">0</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-p1">0</span>
+          <span class="stat-label">道具</span>
+          <span class="stat-p2">0</span>
+        </div>
+      </div>
+      <div class="menu-buttons" id="winMenu">
+        <button class="menu-btn selected" data-action="rematch">再来一局</button>
+        <button class="menu-btn" data-action="mainmenu">返回主菜单</button>
+      </div>
+      <p class="start-hint">摇杆选择 · 按钮确认</p>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
