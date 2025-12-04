@@ -198,6 +198,35 @@ export class BoomerangSystem extends System {
     }
   }
 
+  private updateIceTrails(
+    iceTrails: Array<GameEntity & { iceTrail: IceTrailData }>
+  ): void {
+    for (const trail of iceTrails) {
+      trail.iceTrail.life--;
+
+      // 生命周期结束时移除
+      if (trail.iceTrail.life <= 0) {
+        this.engine.despawn(trail);
+        continue;
+      }
+
+      // 冰冻粒子效果
+      if (trail.iceTrail.life % 15 === 0 && trail.transform) {
+        const particles = spawnParticles(trail.transform.x, trail.transform.y, 1, {
+          spread: Math.PI * 2,
+          speedMin: 0.3,
+          speedMax: 1.5,
+          colors: ['#88f', '#aaf', '#fff'],
+          sizeMin: 2,
+          sizeMax: 4,
+        });
+        for (const p of particles) {
+          this.engine.spawn(p);
+        }
+      }
+    }
+  }
+
   private cleanupBoomerangs(
     boomerangs: Array<GameEntity & { boomerang: BoomerangData }>,
     players: Array<GameEntity & { player: PlayerData }>
