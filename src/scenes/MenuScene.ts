@@ -89,7 +89,7 @@ export class MenuScene extends Scene {
             break;
           case 'tutorial':
             GameSettings.gameMode = 'tutorial';
-            this.engine.goto('game');
+            this.engine.goto('tutorial');
             break;
           case 'start':
           default:
@@ -228,7 +228,7 @@ export class MenuScene extends Scene {
         } else if (mode === 'tutorial') {
           window.initAudio();
           GameSettings.gameMode = 'tutorial';
-          this.engine.goto('game');
+          this.engine.goto('tutorial');
         } else if (mode === 'start') {
           window.initAudio();
           this.engine.goto('select');

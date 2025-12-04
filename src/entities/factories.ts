@@ -57,6 +57,11 @@ export function createPlayer(id: number, x: number, y: number): Partial<GameEnti
       angle: baseAngles[id % baseAngles.length],
       skinIndex: skinIndex,
       gamepadIndex: playerConfig?.gamepadIndex ?? id,
+      // 状态效果
+      frozen: false,
+      frozenTimer: 0,
+      burning: false,
+      burnTimer: 0,
     }
   };
 }
@@ -98,7 +103,12 @@ export function createBoomerang(
       maxBounces: isBig ? BOOMERANG_CONFIG.bigMaxBounces : BOOMERANG_CONFIG.maxBounces,
       isBig,
       rotation: 0,
-      trailTimer: 0
+      trailTimer: 0,
+      // 新道具效果
+      hasFreeze: false,
+      hasFire: false,
+      canPenetrate: false,
+      extendedRange: false,
     }
   };
 }
@@ -300,6 +310,47 @@ export function createFloatingText(
       text,
       color,
       life: 60
+    }
+  };
+}
+
+/**
+ * 创建火焰轨迹实体
+ */
+export function createFireTrail(
+  x: number,
+  y: number,
+  ownerId: number
+): Partial<GameEntity> {
+  return {
+    transform: createTransform(x, y),
+    tags: { values: [EntityTags.FIRE_TRAIL] },
+    collider: createCollider('circle', { radius: 15 }),
+    fireTrail: {
+      life: 120,      // 2秒
+      maxLife: 120,
+      ownerId,
+      damage: true,
+    }
+  };
+}
+
+/**
+ * 创建冰冻轨迹实体
+ */
+export function createIceTrail(
+  x: number,
+  y: number,
+  ownerId: number
+): Partial<GameEntity> {
+  return {
+    transform: createTransform(x, y),
+    tags: { values: [EntityTags.ICE_TRAIL] },
+    collider: createCollider('circle', { radius: 18 }),
+    iceTrail: {
+      life: 180,      // 3秒（比火焰更长）
+      maxLife: 180,
+      ownerId,
     }
   };
 }

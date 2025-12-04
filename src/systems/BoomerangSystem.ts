@@ -4,9 +4,9 @@
  */
 
 import { System } from 'you-engine';
-import type { GameEntity, BoomerangData, PlayerData } from '../entities/types';
+import type { GameEntity, BoomerangData, PlayerData, FireTrailData, IceTrailData } from '../entities/types';
 import { EntityTags } from '../entities/types';
-import { createTrail, spawnParticles } from '../entities/factories';
+import { createTrail, spawnParticles, createFireTrail, createIceTrail } from '../entities/factories';
 import { BOOMERANG_CONFIG, PLAYER_SKINS, GameSettings } from '../config/GameConfig';
 import { GameState } from '../config/GameState';
 
@@ -32,9 +32,25 @@ export class BoomerangSystem extends System {
         !!(e.tags?.values.includes(EntityTags.PLAYER)) && e.player !== undefined
     );
 
+    const fireTrails = this.engine.world.entities.filter(
+      (e): e is GameEntity & { fireTrail: FireTrailData } =>
+        !!(e.tags?.values.includes(EntityTags.FIRE_TRAIL)) && e.fireTrail !== undefined
+    );
+
+    const iceTrails = this.engine.world.entities.filter(
+      (e): e is GameEntity & { iceTrail: IceTrailData } =>
+        !!(e.tags?.values.includes(EntityTags.ICE_TRAIL)) && e.iceTrail !== undefined
+    );
+
     for (const boomerang of boomerangs) {
       this.updateBoomerang(boomerang, players);
     }
+
+    // 更新火焰轨迹
+    this.updateFireTrails(fireTrails);
+
+    // 更新冰冻轨迹
+    this.updateIceTrails(iceTrails);
 
     // 清理超时的回旋镖
     this.cleanupBoomerangs(boomerangs, players);
@@ -53,15 +69,18 @@ export class BoomerangSystem extends System {
 
     // 回旋镖物理
     if (!boomerang.returning) {
-      // 飞出去时减速
-      velocity.x *= BOOMERANG_CONFIG.slowdownRate;
-      velocity.y *= BOOMERANG_CONFIG.slowdownRate;
+      // 飞出去时减速（延长射程时减速更慢）
+      const slowdownRate = boomerang.extendedRange ? 0.995 : BOOMERANG_CONFIG.slowdownRate;
+      velocity.x *= slowdownRate;
+      velocity.y *= slowdownRate;
 
       boomerang.returnTimer++;
       const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
 
-      // 速度太慢或时间到了就返回
-      if (speed < 8 || boomerang.returnTimer > boomerang.maxReturnTime) {
+      // 速度太慢或时间到了就返回（延长射程时返回时间更长）
+      const maxReturnTime = boomerang.extendedRange ? boomerang.maxReturnTime * 1.8 : boomerang.maxReturnTime;
+      const minSpeed = boomerang.extendedRange ? 5 : 8;
+      if (speed < minSpeed || boomerang.returnTimer > maxReturnTime) {
         boomerang.returning = true;
       }
     } else {
@@ -90,7 +109,26 @@ export class BoomerangSystem extends System {
     if (boomerang.trailTimer % 2 === 0) {
       const skin = PLAYER_SKINS[boomerang.ownerId === 0 ? GameSettings.p1Skin : GameSettings.p2Skin];
       const radius = boomerang.isBig ? BOOMERANG_CONFIG.bigRadius : BOOMERANG_CONFIG.radius;
-      this.spawnTrail(transform.x, transform.y, radius * 0.7, skin.color1, 0.5);
+
+      // 火焰道具：留下火焰轨迹
+      if (boomerang.hasFire) {
+        this.spawnTrail(transform.x, transform.y, radius * 0.7, '#f44', 0.7);
+        // 每隔一段距离留下火焰区域
+        if (boomerang.trailTimer % 8 === 0) {
+          const fireTrail = createFireTrail(transform.x, transform.y, boomerang.ownerId);
+          this.engine.spawn(fireTrail);
+        }
+      } else if (boomerang.hasFreeze) {
+        // 冰冻道具：留下冰冻轨迹
+        this.spawnTrail(transform.x, transform.y, radius * 0.7, '#88f', 0.7);
+        // 每隔一段距离留下冰冻区域
+        if (boomerang.trailTimer % 8 === 0) {
+          const iceTrail = createIceTrail(transform.x, transform.y, boomerang.ownerId);
+          this.engine.spawn(iceTrail);
+        }
+      } else {
+        this.spawnTrail(transform.x, transform.y, radius * 0.7, skin.color1, 0.5);
+      }
     }
 
     // 边界反弹（与玩家边界 margin=60 保持一致）
@@ -129,6 +167,35 @@ export class BoomerangSystem extends System {
     }
 
     this.engine.emit('boomerang:bounce', { x: transform.x, y: transform.y });
+  }
+
+  private updateFireTrails(
+    fireTrails: Array<GameEntity & { fireTrail: FireTrailData }>
+  ): void {
+    for (const trail of fireTrails) {
+      trail.fireTrail.life--;
+
+      // 生命周期结束时移除
+      if (trail.fireTrail.life <= 0) {
+        this.engine.despawn(trail);
+        continue;
+      }
+
+      // 火焰粒子效果
+      if (trail.fireTrail.life % 10 === 0 && trail.transform) {
+        const particles = spawnParticles(trail.transform.x, trail.transform.y, 2, {
+          spread: Math.PI * 2,
+          speedMin: 0.5,
+          speedMax: 2,
+          colors: ['#f44', '#f80', '#ff0'],
+          sizeMin: 2,
+          sizeMax: 5,
+        });
+        for (const p of particles) {
+          this.engine.spawn(p);
+        }
+      }
+    }
   }
 
   private cleanupBoomerangs(

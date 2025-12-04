@@ -41,7 +41,12 @@ export const POWERUP_CONFIG = {
   radius: 20,
   duration: 600, // 10秒
   spawnDelay: 180, // 3秒后开始出道具
-  types: ['triple', 'big', 'speed', 'shield', 'magnet'] as const
+  types: ['triple', 'big', 'speed', 'shield', 'magnet', 'freeze', 'fire', 'penetrate', 'range'] as const,
+  // 状态效果持续时间
+  freezeDuration: 120, // 冰冻持续2秒
+  burnDuration: 180,   // 燃烧持续3秒
+  burnDamageInterval: 60, // 每1秒造成燃烧伤害
+  fireTrailLife: 120   // 火焰轨迹持续2秒
 };
 
 // 道具颜色
@@ -50,7 +55,11 @@ export const POWERUP_COLORS: Record<string, string> = {
   big: '#f0f',
   speed: '#0ff',
   shield: '#0f0',
-  magnet: '#f80'
+  magnet: '#f80',
+  freeze: '#88f',    // 冰冻 - 蓝紫色
+  fire: '#f44',      // 火焰 - 红色
+  penetrate: '#fff', // 穿透 - 白色
+  range: '#8f8'      // 延长射程 - 浅绿色
 };
 
 // 道具名称
@@ -59,7 +68,11 @@ export const POWERUP_NAMES: Record<string, string> = {
   big: '巨大化',
   speed: '加速',
   shield: '护盾',
-  magnet: '磁铁'
+  magnet: '磁铁',
+  freeze: '冰冻',
+  fire: '火焰',
+  penetrate: '穿透',
+  range: '远程'
 };
 
 // 角色形状类型

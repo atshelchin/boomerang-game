@@ -8,9 +8,11 @@ import { PlayerSystem } from './systems/PlayerSystem';
 import { BoomerangSystem } from './systems/BoomerangSystem';
 import { CollisionSystem } from './systems/CollisionSystem';
 import { GameRenderSystem } from './systems/GameRenderSystem';
+import { DynamicCameraSystem } from './systems/DynamicCameraSystem';
 import { GameScene } from './scenes/GameScene';
 import { MenuScene } from './scenes/MenuScene';
 import { CharacterSelectScene } from './scenes/CharacterSelectScene';
+import { TutorialScene } from './scenes/TutorialScene';
 import { DESIGN_WIDTH, DESIGN_HEIGHT, GameSettings } from './config/GameConfig';
 import { GameState } from './config/GameState';
 
@@ -61,6 +63,7 @@ engine
   .use(PlayerSystem)
   .use(BoomerangSystem)
   .use(CollisionSystem)
+  .use(DynamicCameraSystem)
   .use(GameRenderSystem);
 
 // 设置输入映射
@@ -82,6 +85,7 @@ window.addEventListener('resize', updateScale);
 engine.addScene('menu', MenuScene);
 engine.addScene('select', CharacterSelectScene);
 engine.addScene('game', GameScene);
+engine.addScene('tutorial', TutorialScene);
 
 // 事件监听
 engine.on('player:throw', () => {
@@ -126,6 +130,22 @@ engine.on('powerup:collect', (data) => {
   playSound('powerup_' + type);
   shakeScreen(6);
   flashScreen(0.3, 100);
+});
+
+engine.on('player:freeze', () => {
+  playSound('freeze');
+  shakeScreen(10);
+  flashScreen(0.4, 150);
+});
+
+engine.on('player:burn', () => {
+  playSound('burn');
+  shakeScreen(8);
+});
+
+engine.on('player:burnDamage', () => {
+  playSound('burnTick');
+  shakeScreen(3);
 });
 
 // 音频系统
@@ -339,6 +359,110 @@ function playSound(type: string): void {
       gain.gain.setValueAtTime(0.3, now);
       gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
       osc.start(now); osc.stop(now + 0.2);
+    },
+    powerup_freeze: () => {
+      // 冰冻道具 - 冰晶碎裂声
+      [1200, 1400, 1000].forEach((f, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(master);
+        osc.type = 'sine';
+        osc.frequency.value = f;
+        const t = now + i * 0.03;
+        gain.gain.setValueAtTime(0.25, t);
+        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.08);
+        osc.start(t); osc.stop(t + 0.08);
+      });
+    },
+    powerup_fire: () => {
+      // 火焰道具 - 火焰点燃声
+      const noise = ctx.createBufferSource();
+      const buffer = ctx.createBuffer(1, ctx.sampleRate * 0.15, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < data.length; i++) {
+        data[i] = (Math.random() * 2 - 1) * 0.4 * Math.exp(-i / (ctx.sampleRate * 0.08));
+      }
+      noise.buffer = buffer;
+      const ng = ctx.createGain();
+      noise.connect(ng); ng.connect(master);
+      ng.gain.value = 0.35;
+      noise.start(now);
+
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(master);
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(100, now);
+      osc.frequency.exponentialRampToValueAtTime(300, now + 0.1);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+      osc.start(now); osc.stop(now + 0.15);
+    },
+    powerup_penetrate: () => {
+      // 穿透道具 - 穿透音
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(master);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(800, now);
+      osc.frequency.exponentialRampToValueAtTime(200, now + 0.15);
+      gain.gain.setValueAtTime(0.35, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+      osc.start(now); osc.stop(now + 0.2);
+    },
+    powerup_range: () => {
+      // 远程道具 - 延伸音
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(master);
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(300, now);
+      osc.frequency.exponentialRampToValueAtTime(600, now + 0.2);
+      gain.gain.setValueAtTime(0.3, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+      osc.start(now); osc.stop(now + 0.25);
+    },
+    freeze: () => {
+      // 冰冻效果 - 冰封声
+      [1500, 1200, 900, 600].forEach((f, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(master);
+        osc.type = 'sine';
+        osc.frequency.value = f;
+        const t = now + i * 0.04;
+        gain.gain.setValueAtTime(0.35, t);
+        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
+        osc.start(t); osc.stop(t + 0.1);
+      });
+    },
+    burn: () => {
+      // 燃烧效果 - 火焰点燃声
+      const noise = ctx.createBufferSource();
+      const buffer = ctx.createBuffer(1, ctx.sampleRate * 0.2, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < data.length; i++) {
+        data[i] = (Math.random() * 2 - 1) * 0.5 * Math.exp(-i / (ctx.sampleRate * 0.1));
+      }
+      noise.buffer = buffer;
+      const ng = ctx.createGain();
+      noise.connect(ng); ng.connect(master);
+      ng.gain.value = 0.4;
+      noise.start(now);
+    },
+    burnTick: () => {
+      // 燃烧伤害 - 滋滋声
+      const noise = ctx.createBufferSource();
+      const buffer = ctx.createBuffer(1, ctx.sampleRate * 0.05, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < data.length; i++) {
+        data[i] = (Math.random() * 2 - 1) * 0.3;
+      }
+      noise.buffer = buffer;
+      const ng = ctx.createGain();
+      noise.connect(ng); ng.connect(master);
+      ng.gain.value = 0.2;
+      noise.start(now);
     }
   };
 

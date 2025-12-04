@@ -7,8 +7,9 @@ import { System, InputSystem } from 'you-engine';
 import type { GameEntity, PlayerData } from '../entities/types';
 import { EntityTags } from '../entities/types';
 import { createBoomerang, createTrail, spawnParticles } from '../entities/factories';
-import { PLAYER_CONFIG, BOOMERANG_CONFIG, PLAYER_SKINS, GameSettings } from '../config/GameConfig';
+import { PLAYER_CONFIG, BOOMERANG_CONFIG, PLAYER_SKINS, GameSettings, POWERUP_CONFIG } from '../config/GameConfig';
 import { GameState, Stats } from '../config/GameState';
+import { createParticle } from '../entities/factories';
 
 export class PlayerSystem extends System {
   static priority = 10;
@@ -51,6 +52,61 @@ export class PlayerSystem extends System {
       player.powerups[i].timer--;
       if (player.powerups[i].timer <= 0) {
         player.powerups.splice(i, 1);
+      }
+    }
+
+    // 更新冰冻状态
+    if (player.frozen) {
+      player.frozenTimer--;
+      if (player.frozenTimer <= 0) {
+        player.frozen = false;
+        this.engine.emit('player:unfreeze', { playerId: player.playerId });
+      } else {
+        // 冰冻时完全无法移动，只更新冰冻粒子效果
+        if (GameState.time % 10 === 0) {
+          const particle = createParticle(
+            transform.x + (Math.random() - 0.5) * 40,
+            transform.y + (Math.random() - 0.5) * 40,
+            (Math.random() - 0.5) * 2,
+            -Math.random() * 3,
+            { size: 4, color: '#88f', life: 30 }
+          );
+          this.engine.spawn(particle);
+        }
+        // 冰冻时不能做任何动作
+        velocity.x *= 0.9;
+        velocity.y *= 0.9;
+        return;
+      }
+    }
+
+    // 更新燃烧状态
+    if (player.burning) {
+      player.burnTimer--;
+      if (player.burnTimer <= 0) {
+        player.burning = false;
+        this.engine.emit('player:burnEnd', { playerId: player.playerId });
+      } else {
+        // 燃烧粒子效果
+        if (GameState.time % 5 === 0) {
+          const particle = createParticle(
+            transform.x + (Math.random() - 0.5) * 30,
+            transform.y + (Math.random() - 0.5) * 30,
+            (Math.random() - 0.5) * 3,
+            -Math.random() * 5 - 2,
+            { size: 5, color: Math.random() > 0.5 ? '#f44' : '#f80', life: 25 }
+          );
+          this.engine.spawn(particle);
+        }
+        // 燃烧伤害：每隔一段时间造成伤害（杀死玩家）
+        if (player.burnTimer % POWERUP_CONFIG.burnDamageInterval === 0) {
+          // 燃烧致死 - ownerId为-1表示环境伤害
+          this.engine.emit('player:burnDamage', {
+            playerId: player.playerId,
+            x: transform.x,
+            y: transform.y
+          });
+        }
       }
     }
 
@@ -483,8 +539,22 @@ export class PlayerSystem extends System {
 
     const isTriple = this.hasPowerup(player, 'triple');
     const isBig = this.hasPowerup(player, 'big');
+    const hasFreeze = this.hasPowerup(player, 'freeze');
+    const hasFire = this.hasPowerup(player, 'fire');
+    const canPenetrate = this.hasPowerup(player, 'penetrate');
+    const extendedRange = this.hasPowerup(player, 'range');
 
     const throwDist = 40;
+
+    // 辅助函数：应用道具效果到回旋镖
+    const applyPowerupEffects = (boomerang: Partial<GameEntity>) => {
+      if (boomerang.boomerang) {
+        boomerang.boomerang.hasFreeze = hasFreeze;
+        boomerang.boomerang.hasFire = hasFire;
+        boomerang.boomerang.canPenetrate = canPenetrate;
+        boomerang.boomerang.extendedRange = extendedRange;
+      }
+    };
 
     if (isTriple) {
       [-0.3, 0, 0.3].forEach(offset => {
@@ -495,8 +565,9 @@ export class PlayerSystem extends System {
           transform.y + Math.sin(angle) * throwDist,
           Math.cos(angle) * speed,
           Math.sin(angle) * speed,
-          false
+          isBig  // 三连发也可以变大
         );
+        applyPowerupEffects(boomerang);
         this.engine.spawn(boomerang);
       });
     } else {
@@ -508,6 +579,7 @@ export class PlayerSystem extends System {
         Math.sin(player.angle) * speed,
         isBig
       );
+      applyPowerupEffects(boomerang);
       this.engine.spawn(boomerang);
     }
 

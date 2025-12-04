@@ -85,6 +85,10 @@ export interface Translations {
     speed: string;
     shield: string;
     magnet: string;
+    freeze: string;
+    fire: string;
+    penetrate: string;
+    range: string;
   };
 
   // 提示
@@ -92,6 +96,40 @@ export interface Translations {
     oneHitKill: string;
     useStick: string;
     pressButton: string;
+  };
+
+  // 教程
+  tutorial: {
+    title: string;
+    intro: string;
+    introDesc: string;
+    move: string;
+    moveDesc: string;
+    throw: string;
+    throwDesc: string;
+    catch: string;
+    catchDesc: string;
+    charge: string;
+    chargeDesc: string;
+    dash: string;
+    dashDesc: string;
+    powerupTriple: string;
+    powerupTripleDesc: string;
+    powerupBig: string;
+    powerupBigDesc: string;
+    powerupSpeed: string;
+    powerupSpeedDesc: string;
+    powerupShield: string;
+    powerupShieldDesc: string;
+    powerupMagnet: string;
+    powerupMagnetDesc: string;
+    kill: string;
+    killDesc: string;
+    complete: string;
+    completeDesc: string;
+    pressAnyButton: string;
+    stepComplete: string;
+    skip: string;
   };
 }
 
@@ -167,12 +205,49 @@ const zh: Translations = {
     speed: '加速',
     shield: '护盾',
     magnet: '磁铁',
+    freeze: '冰冻',
+    fire: '火焰',
+    penetrate: '穿透',
+    range: '远程',
   },
 
   tips: {
     oneHitKill: '一击必杀 · 回旋镖也能伤到自己！',
     useStick: '用摇杆选择，按任意按钮确认',
     pressButton: '摇杆选择 · 按钮确认',
+  },
+
+  tutorial: {
+    title: '教程',
+    intro: '欢迎来到回旋斩！',
+    introDesc: '让我们学习基本操作',
+    move: '移动',
+    moveDesc: '用摇杆或方向键移动角色',
+    throw: '投掷回旋镖',
+    throwDesc: '按 A 键或 J 键投掷回旋镖',
+    catch: '接住回旋镖',
+    catchDesc: '回旋镖返回时会自动接住',
+    charge: '蓄力投掷',
+    chargeDesc: '长按投掷键蓄力，松开发射更强的回旋镖',
+    dash: '冲刺',
+    dashDesc: '按 B 键或 K 键快速冲刺躲避攻击',
+    powerupTriple: '三连发',
+    powerupTripleDesc: '拾取后一次投掷三个回旋镖',
+    powerupBig: '巨型回旋镖',
+    powerupBigDesc: '拾取后回旋镖变大，范围更广',
+    powerupSpeed: '加速',
+    powerupSpeedDesc: '拾取后移动速度大幅提升',
+    powerupShield: '护盾',
+    powerupShieldDesc: '拾取后获得一次免死保护',
+    powerupMagnet: '磁铁',
+    powerupMagnetDesc: '拾取后回旋镖会自动追踪敌人',
+    kill: '击杀敌人',
+    killDesc: '用回旋镖击中敌人！',
+    complete: '教程完成！',
+    completeDesc: '你已掌握所有基本操作，准备战斗吧！',
+    pressAnyButton: '按任意键继续',
+    stepComplete: '完成！',
+    skip: '按 + 键跳过教程',
   },
 };
 
@@ -248,12 +323,49 @@ const en: Translations = {
     speed: 'Speed Up',
     shield: 'Shield',
     magnet: 'Magnet',
+    freeze: 'Freeze',
+    fire: 'Fire',
+    penetrate: 'Penetrate',
+    range: 'Extended Range',
   },
 
   tips: {
     oneHitKill: 'One hit kill · Your boomerang can hurt you too!',
     useStick: 'Use stick to select, press any button to confirm',
     pressButton: 'Stick to select · Button to confirm',
+  },
+
+  tutorial: {
+    title: 'Tutorial',
+    intro: 'Welcome to Boomerang Slash!',
+    introDesc: "Let's learn the basics",
+    move: 'Move',
+    moveDesc: 'Use the stick or arrow keys to move',
+    throw: 'Throw Boomerang',
+    throwDesc: 'Press A or J to throw your boomerang',
+    catch: 'Catch Boomerang',
+    catchDesc: 'The boomerang returns automatically',
+    charge: 'Charge Throw',
+    chargeDesc: 'Hold throw button to charge, release for power shot',
+    dash: 'Dash',
+    dashDesc: 'Press B or K to dash and dodge attacks',
+    powerupTriple: 'Triple Shot',
+    powerupTripleDesc: 'Throws three boomerangs at once',
+    powerupBig: 'Big Boomerang',
+    powerupBigDesc: 'Makes your boomerang larger with wider range',
+    powerupSpeed: 'Speed Up',
+    powerupSpeedDesc: 'Greatly increases movement speed',
+    powerupShield: 'Shield',
+    powerupShieldDesc: 'Protects from one fatal hit',
+    powerupMagnet: 'Magnet',
+    powerupMagnetDesc: 'Boomerang tracks enemies automatically',
+    kill: 'Defeat Enemy',
+    killDesc: 'Hit the enemy with your boomerang!',
+    complete: 'Tutorial Complete!',
+    completeDesc: "You've mastered the basics. Ready to fight!",
+    pressAnyButton: 'Press any button to continue',
+    stepComplete: 'Complete!',
+    skip: 'Press + to skip tutorial',
   },
 };
 
@@ -329,12 +441,49 @@ const ja: Translations = {
     speed: 'スピードアップ',
     shield: 'シールド',
     magnet: 'マグネット',
+    freeze: 'フリーズ',
+    fire: 'ファイア',
+    penetrate: '貫通',
+    range: '射程延長',
   },
 
   tips: {
     oneHitKill: '一撃必殺・ブーメランは自分も傷つけます！',
     useStick: 'スティックで選択、ボタンで決定',
     pressButton: 'スティック選択・ボタン決定',
+  },
+
+  tutorial: {
+    title: 'チュートリアル',
+    intro: 'ブーメランスラッシュへようこそ！',
+    introDesc: '基本操作を学びましょう',
+    move: '移動',
+    moveDesc: 'スティックまたは矢印キーで移動',
+    throw: 'ブーメランを投げる',
+    throwDesc: 'AまたはJキーでブーメランを投げる',
+    catch: 'ブーメランをキャッチ',
+    catchDesc: 'ブーメランは自動で戻ってきます',
+    charge: 'チャージ投げ',
+    chargeDesc: '投げボタン長押しでチャージ、離すとパワーショット',
+    dash: 'ダッシュ',
+    dashDesc: 'BまたはKキーでダッシュして攻撃を回避',
+    powerupTriple: 'トリプルショット',
+    powerupTripleDesc: '一度に3つのブーメランを投げる',
+    powerupBig: 'ビッグブーメラン',
+    powerupBigDesc: 'ブーメランが大きくなり、範囲が広がる',
+    powerupSpeed: 'スピードアップ',
+    powerupSpeedDesc: '移動速度が大幅にアップ',
+    powerupShield: 'シールド',
+    powerupShieldDesc: '一度だけ致命的な攻撃を防ぐ',
+    powerupMagnet: 'マグネット',
+    powerupMagnetDesc: 'ブーメランが敵を自動追尾',
+    kill: '敵を倒す',
+    killDesc: 'ブーメランで敵を倒そう！',
+    complete: 'チュートリアル完了！',
+    completeDesc: '基本をマスターしました。さあ、戦いましょう！',
+    pressAnyButton: 'ボタンを押して続ける',
+    stepComplete: '完了！',
+    skip: '+を押してスキップ',
   },
 };
 

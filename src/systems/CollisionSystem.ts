@@ -5,22 +5,26 @@
  */
 
 import { System, InputSystem, MatterPhysicsSystem } from 'you-engine';
-import type { GameEntity, PlayerData, BoomerangData, PowerupData, WallData } from '../entities/types';
+import type { GameEntity, PlayerData, BoomerangData, PowerupData, WallData, FireTrailData } from '../entities/types';
 import { EntityTags } from '../entities/types';
+import { POWERUP_CONFIG } from '../config/GameConfig';
 import { createRing, spawnParticles, createFloatingText, createParticle } from '../entities/factories';
 import { POWERUP_COLORS, PLAYER_SKINS, GameSettings } from '../config/GameConfig';
 import { i18n } from '../config/i18n';
 import { GameState, Stats } from '../config/GameState';
+import { DynamicCameraSystem } from './DynamicCameraSystem';
 
 export class CollisionSystem extends System {
   static priority = 30;
 
   private input!: InputSystem;
   private physics!: MatterPhysicsSystem;
+  private dynamicCamera!: DynamicCameraSystem;
 
   onCreate(): void {
     this.input = this.engine.system(InputSystem);
     this.physics = this.engine.system(MatterPhysicsSystem);
+    this.dynamicCamera = this.engine.system(DynamicCameraSystem);
   }
 
   // Canvas 变换已自动处理缩放，不需要手动缩放
@@ -69,6 +73,15 @@ export class CollisionSystem extends System {
 
     // 玩家和道具碰撞
     this.handlePowerupCollisions(players, powerups);
+
+    // 火焰轨迹
+    const fireTrails = this.engine.world.entities.filter(
+      (e): e is GameEntity & { fireTrail: FireTrailData } =>
+        !!(e.tags?.values.includes(EntityTags.FIRE_TRAIL)) && e.fireTrail !== undefined
+    );
+
+    // 玩家和火焰轨迹碰撞
+    this.handleFireTrailCollisions(players, fireTrails);
   }
 
   private handlePlayerPlayerCollisions(
@@ -253,7 +266,12 @@ export class CollisionSystem extends System {
             if (this.hasPowerup(player.player, 'shield') && player.player.shieldHits > 0) {
               this.shieldBlock(player, boomerang);
             } else {
-              this.killPlayer(player, boomerang.boomerang.ownerId);
+              // 冰冻效果：不杀死玩家，而是冻结他们
+              if (boomerang.boomerang.hasFreeze && !player.player.frozen) {
+                this.freezePlayer(player, boomerang.boomerang.ownerId);
+              } else {
+                this.killPlayer(player, boomerang.boomerang.ownerId);
+              }
             }
           }
         }
@@ -267,6 +285,9 @@ export class CollisionSystem extends System {
   ): void {
     for (const boomerang of boomerangs) {
       if (!boomerang.transform || !boomerang.velocity) continue;
+
+      // 穿透效果：跳过墙体碰撞
+      if (boomerang.boomerang.canPenetrate) continue;
 
       for (const wall of walls) {
         if (!wall.transform || !wall.wall) continue;
@@ -514,6 +535,11 @@ export class CollisionSystem extends System {
       y: victim.transform?.y ?? 0
     });
 
+    // 触发摄像机击杀特写
+    if (victim.transform) {
+      this.dynamicCamera.triggerKillFocus(victim.transform.x, victim.transform.y);
+    }
+
     // 检查回合是否结束（多人模式：只剩一人或一队）
     this.checkRoundEnd();
   }
@@ -690,5 +716,130 @@ export class CollisionSystem extends System {
     for (const p of particles) {
       this.engine.spawn(p);
     }
+  }
+
+  /** 冻结玩家 */
+  private freezePlayer(
+    victim: GameEntity & { player: PlayerData },
+    freezerId: number
+  ): void {
+    victim.player.frozen = true;
+    victim.player.frozenTimer = POWERUP_CONFIG.freezeDuration;
+
+    // 停止移动
+    if (victim.velocity) {
+      victim.velocity.x = 0;
+      victim.velocity.y = 0;
+    }
+
+    // 冰冻粒子效果
+    if (victim.transform) {
+      this.spawnParticleEffect(victim.transform.x, victim.transform.y, {
+        spread: Math.PI * 2,
+        speedMin: 2,
+        speedMax: 8,
+        colors: ['#88f', '#aaf', '#fff', '#ccf'],
+        sizeMin: 3,
+        sizeMax: 8,
+        count: 20
+      });
+
+      // 冰冻环
+      const ring = createRing(victim.transform.x, victim.transform.y, '#88f', 100);
+      this.engine.spawn(ring);
+
+      // 浮动文字
+      const floatText = createFloatingText(
+        victim.transform.x,
+        victim.transform.y - 30,
+        i18n.t.powerups.freeze,
+        '#88f'
+      );
+      this.engine.spawn(floatText);
+    }
+
+    // 震动反馈
+    if (!victim.player.isAI) {
+      this.input.vibrate(victim.player.playerId, { strong: 0.5, weak: 0.6, duration: 100 });
+    }
+
+    this.engine.emit('player:freeze', {
+      victimId: victim.player.playerId,
+      freezerId,
+      x: victim.transform?.x ?? 0,
+      y: victim.transform?.y ?? 0
+    });
+  }
+
+  /** 处理火焰轨迹碰撞 */
+  private handleFireTrailCollisions(
+    players: Array<GameEntity & { player: PlayerData }>,
+    fireTrails: Array<GameEntity & { fireTrail: FireTrailData }>
+  ): void {
+    for (const fireTrail of fireTrails) {
+      if (!fireTrail.transform || !fireTrail.collider || !fireTrail.fireTrail.damage) continue;
+
+      const fRadius = fireTrail.collider.radius ?? 15;
+
+      for (const player of players) {
+        if (!player.player.alive || !player.transform || !player.collider) continue;
+        // 火焰不伤害自己
+        if (player.player.playerId === fireTrail.fireTrail.ownerId) continue;
+        // 已经在燃烧的玩家不重复触发
+        if (player.player.burning) continue;
+
+        const pRadius = player.collider.radius ?? 28;
+        const dx = fireTrail.transform.x - player.transform.x;
+        const dy = fireTrail.transform.y - player.transform.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist < fRadius + pRadius) {
+          this.burnPlayer(player, fireTrail.fireTrail.ownerId);
+        }
+      }
+    }
+  }
+
+  /** 燃烧玩家 */
+  private burnPlayer(
+    victim: GameEntity & { player: PlayerData },
+    burnerId: number
+  ): void {
+    victim.player.burning = true;
+    victim.player.burnTimer = POWERUP_CONFIG.burnDuration;
+
+    // 燃烧粒子效果
+    if (victim.transform) {
+      this.spawnParticleEffect(victim.transform.x, victim.transform.y, {
+        spread: Math.PI * 2,
+        speedMin: 3,
+        speedMax: 10,
+        colors: ['#f44', '#f80', '#ff0', '#fff'],
+        sizeMin: 3,
+        sizeMax: 8,
+        count: 15
+      });
+
+      // 浮动文字
+      const floatText = createFloatingText(
+        victim.transform.x,
+        victim.transform.y - 30,
+        i18n.t.powerups.fire,
+        '#f44'
+      );
+      this.engine.spawn(floatText);
+    }
+
+    // 震动反馈
+    if (!victim.player.isAI) {
+      this.input.vibrate(victim.player.playerId, { strong: 0.4, weak: 0.5, duration: 80 });
+    }
+
+    this.engine.emit('player:burn', {
+      victimId: victim.player.playerId,
+      burnerId,
+      x: victim.transform?.x ?? 0,
+      y: victim.transform?.y ?? 0
+    });
   }
 }

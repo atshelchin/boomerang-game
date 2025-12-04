@@ -13,12 +13,15 @@ import type {
   ParticleData,
   TrailData,
   RingData,
-  FloatingTextData
+  FloatingTextData,
+  FireTrailData
 } from '../entities/types';
 import { EntityTags } from '../entities/types';
 import { PLAYER_CONFIG, BOOMERANG_CONFIG, POWERUP_COLORS, PLAYER_SKINS, GameSettings, CHARACTER_COLORS, CHARACTER_SHAPES, TEAM_COLORS } from '../config/GameConfig';
 import { CharacterRenderer } from '../utils/CharacterRenderer';
 import { GameState } from '../config/GameState';
+import { TutorialState, TUTORIAL_STEPS } from '../config/TutorialState';
+import { i18n } from '../config/i18n';
 
 export class GameRenderSystem extends System {
   static priority = 100;
@@ -38,17 +41,19 @@ export class GameRenderSystem extends System {
     // 0. 边界
     // 1. 轨迹
     // 2. 墙体
-    // 3. 道具
-    // 4. 粒子
-    // 5. 回旋镖
-    // 6. 玩家
-    // 7. 环形效果
-    // 8. 浮动文字
-    // 9. UI元素
+    // 3. 火焰轨迹
+    // 4. 道具
+    // 5. 粒子
+    // 6. 回旋镖
+    // 7. 玩家
+    // 8. 环形效果
+    // 9. 浮动文字
+    // 10. UI元素
 
     this.renderBoundary(ctx);
     this.renderTrails(ctx);
     this.renderWalls(ctx);
+    this.renderFireTrails(ctx);
     this.renderPowerups(ctx);
     this.renderParticles(ctx);
     this.renderBoomerangs(ctx);
@@ -242,6 +247,50 @@ export class GameRenderSystem extends System {
     }
   }
 
+  private renderFireTrails(ctx: CanvasRenderingContext2D): void {
+    const fireTrails = this.engine.world.entities.filter(
+      (e): e is GameEntity & { fireTrail: FireTrailData } =>
+        !!(e.tags?.values.includes(EntityTags.FIRE_TRAIL)) && e.fireTrail !== undefined
+    );
+
+    for (const fireTrail of fireTrails) {
+      if (!fireTrail.transform) continue;
+
+      const { fireTrail: ft, transform } = fireTrail;
+      const lifeRatio = ft.life / ft.maxLife;
+      const radius = 15 + (1 - lifeRatio) * 5; // 逐渐扩大
+
+      ctx.save();
+      ctx.translate(transform.x, transform.y);
+
+      // 火焰发光效果
+      ctx.shadowColor = '#f80';
+      ctx.shadowBlur = 20 * lifeRatio;
+
+      // 火焰渐变
+      const fireGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
+      fireGrad.addColorStop(0, `rgba(255, 255, 100, ${lifeRatio * 0.9})`);
+      fireGrad.addColorStop(0.4, `rgba(255, 150, 50, ${lifeRatio * 0.7})`);
+      fireGrad.addColorStop(0.7, `rgba(255, 80, 20, ${lifeRatio * 0.5})`);
+      fireGrad.addColorStop(1, `rgba(200, 50, 0, 0)`);
+
+      ctx.fillStyle = fireGrad;
+      ctx.beginPath();
+      ctx.arc(0, 0, radius, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 火焰闪烁效果
+      const flicker = Math.sin(GameState.time * 0.5 + transform.x * 0.1) * 0.3 + 0.7;
+      ctx.globalAlpha = lifeRatio * flicker;
+      ctx.fillStyle = '#ff0';
+      ctx.beginPath();
+      ctx.arc(0, 0, radius * 0.4, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    }
+  }
+
   private renderPowerups(ctx: CanvasRenderingContext2D): void {
     const powerups = this.engine.world.entities.filter(
       (e): e is GameEntity & { powerup: PowerupData } =>
@@ -339,6 +388,65 @@ export class GameRenderSystem extends System {
         ctx.lineTo(-6, 8);
         ctx.moveTo(6, 0);
         ctx.lineTo(6, 8);
+        ctx.stroke();
+      } else if (pu.type === 'freeze') {
+        // 雪花图标
+        ctx.lineWidth = 2;
+        for (let i = 0; i < 6; i++) {
+          const angle = (i / 6) * Math.PI * 2;
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(Math.cos(angle) * 10, Math.sin(angle) * 10);
+          ctx.stroke();
+          // 小分叉
+          const branchAngle1 = angle + 0.4;
+          const branchAngle2 = angle - 0.4;
+          ctx.beginPath();
+          ctx.moveTo(Math.cos(angle) * 6, Math.sin(angle) * 6);
+          ctx.lineTo(Math.cos(branchAngle1) * 9, Math.sin(branchAngle1) * 9);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(Math.cos(angle) * 6, Math.sin(angle) * 6);
+          ctx.lineTo(Math.cos(branchAngle2) * 9, Math.sin(branchAngle2) * 9);
+          ctx.stroke();
+        }
+      } else if (pu.type === 'fire') {
+        // 火焰图标
+        ctx.beginPath();
+        ctx.moveTo(0, -10);
+        ctx.quadraticCurveTo(6, -5, 5, 0);
+        ctx.quadraticCurveTo(8, 5, 4, 10);
+        ctx.quadraticCurveTo(0, 6, -4, 10);
+        ctx.quadraticCurveTo(-8, 5, -5, 0);
+        ctx.quadraticCurveTo(-6, -5, 0, -10);
+        ctx.fill();
+      } else if (pu.type === 'penetrate') {
+        // 穿透图标 - 箭头穿过方块
+        ctx.lineWidth = 2;
+        // 方块
+        ctx.strokeRect(-5, -5, 10, 10);
+        // 箭头
+        ctx.beginPath();
+        ctx.moveTo(-10, 0);
+        ctx.lineTo(10, 0);
+        ctx.moveTo(6, -4);
+        ctx.lineTo(10, 0);
+        ctx.lineTo(6, 4);
+        ctx.stroke();
+      } else if (pu.type === 'range') {
+        // 延长图标 - 双箭头扩展
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(-8, 0);
+        ctx.lineTo(8, 0);
+        // 左箭头
+        ctx.moveTo(-4, -4);
+        ctx.lineTo(-8, 0);
+        ctx.lineTo(-4, 4);
+        // 右箭头
+        ctx.moveTo(4, -4);
+        ctx.lineTo(8, 0);
+        ctx.lineTo(4, 4);
         ctx.stroke();
       }
 
@@ -489,6 +597,70 @@ export class GameRenderSystem extends System {
       // 使用 CharacterRenderer 绘制角色形状
       CharacterRenderer.renderShape(ctx, shape.id, color.color1, color.color2, radius, p.angle, GameState.time);
 
+      // 冰冻效果
+      if (p.frozen) {
+        // 冰块覆盖层
+        ctx.save();
+        ctx.globalAlpha = 0.6;
+
+        // 冰晶渐变
+        const iceGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, radius + 8);
+        iceGrad.addColorStop(0, 'rgba(150, 200, 255, 0.3)');
+        iceGrad.addColorStop(0.6, 'rgba(100, 150, 255, 0.5)');
+        iceGrad.addColorStop(1, 'rgba(80, 120, 255, 0.7)');
+
+        ctx.fillStyle = iceGrad;
+        ctx.beginPath();
+        ctx.arc(0, 0, radius + 5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 冰晶纹理
+        ctx.strokeStyle = 'rgba(200, 230, 255, 0.8)';
+        ctx.lineWidth = 2;
+        for (let i = 0; i < 6; i++) {
+          const angle = (i / 6) * Math.PI * 2;
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(Math.cos(angle) * (radius + 3), Math.sin(angle) * (radius + 3));
+          ctx.stroke();
+        }
+
+        // 冰冻光环
+        ctx.strokeStyle = '#88f';
+        ctx.lineWidth = 3;
+        ctx.globalAlpha = 0.5 + Math.sin(GameState.time * 0.2) * 0.2;
+        ctx.beginPath();
+        ctx.arc(0, 0, radius + 10, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.restore();
+      }
+
+      // 燃烧效果
+      if (p.burning) {
+        ctx.save();
+
+        // 火焰光环
+        const fireAlpha = 0.5 + Math.sin(GameState.time * 0.3) * 0.2;
+        ctx.globalAlpha = fireAlpha;
+        ctx.strokeStyle = '#f80';
+        ctx.lineWidth = 4;
+        ctx.shadowColor = '#f44';
+        ctx.shadowBlur = 15;
+        ctx.beginPath();
+        ctx.arc(0, 0, radius + 8, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // 外圈火焰
+        ctx.strokeStyle = '#f44';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, 0, radius + 14 + Math.sin(GameState.time * 0.5) * 3, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.restore();
+      }
+
       // 队伍小标记（头顶）
       if (teamColor) {
         ctx.fillStyle = teamColor.color;
@@ -629,6 +801,49 @@ export class GameRenderSystem extends System {
         ctx.lineTo(-4, 4);
         ctx.moveTo(4, -1);
         ctx.lineTo(4, 4);
+        ctx.stroke();
+      } else if (pu.type === 'freeze') {
+        // 雪花图标（小版）
+        ctx.lineWidth = 1.5;
+        for (let i = 0; i < 6; i++) {
+          const angle = (i / 6) * Math.PI * 2;
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(Math.cos(angle) * 6, Math.sin(angle) * 6);
+          ctx.stroke();
+        }
+      } else if (pu.type === 'fire') {
+        // 火焰图标（小版）
+        ctx.beginPath();
+        ctx.moveTo(0, -5);
+        ctx.quadraticCurveTo(3, -2, 3, 0);
+        ctx.quadraticCurveTo(4, 3, 2, 5);
+        ctx.quadraticCurveTo(0, 3, -2, 5);
+        ctx.quadraticCurveTo(-4, 3, -3, 0);
+        ctx.quadraticCurveTo(-3, -2, 0, -5);
+        ctx.fill();
+      } else if (pu.type === 'penetrate') {
+        // 穿透图标（小版）
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(-5, 0);
+        ctx.lineTo(5, 0);
+        ctx.moveTo(3, -2);
+        ctx.lineTo(5, 0);
+        ctx.lineTo(3, 2);
+        ctx.stroke();
+      } else if (pu.type === 'range') {
+        // 延长图标（小版）
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(-5, 0);
+        ctx.lineTo(5, 0);
+        ctx.moveTo(-3, -2);
+        ctx.lineTo(-5, 0);
+        ctx.lineTo(-3, 2);
+        ctx.moveTo(3, -2);
+        ctx.lineTo(5, 0);
+        ctx.lineTo(3, 2);
         ctx.stroke();
       }
       ctx.restore();
@@ -899,6 +1114,141 @@ export class GameRenderSystem extends System {
     if (GameState.state === 'win') {
       this.renderVictoryScreen(ctx);
     }
+
+    // 教程界面
+    if (GameState.state === 'tutorial') {
+      this.renderTutorialUI(ctx);
+    }
+  }
+
+  /**
+   * 渲染教程界面
+   */
+  private renderTutorialUI(ctx: CanvasRenderingContext2D): void {
+    if (!TutorialState.active) return;
+
+    const W = this.engine.width;
+    const H = this.engine.height;
+    const step = TutorialState.getCurrentStep();
+    const t = i18n.t.tutorial;
+
+    ctx.save();
+
+    // 顶部教程标题栏
+    const headerHeight = 80;
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(0, 0, W, headerHeight);
+
+    // 进度条背景
+    const progressBarWidth = W * 0.6;
+    const progressBarHeight = 8;
+    const progressBarX = (W - progressBarWidth) / 2;
+    const progressBarY = 60;
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.beginPath();
+    ctx.roundRect(progressBarX, progressBarY, progressBarWidth, progressBarHeight, 4);
+    ctx.fill();
+
+    // 进度条填充
+    const progress = (TutorialState.currentStepIndex + 1) / TUTORIAL_STEPS.length;
+    ctx.fillStyle = '#4fc3f7';
+    ctx.beginPath();
+    ctx.roundRect(progressBarX, progressBarY, progressBarWidth * progress, progressBarHeight, 4);
+    ctx.fill();
+
+    // 步骤标题
+    const stepTitles: Record<string, string> = {
+      'intro': t.intro,
+      'move': t.move,
+      'throw': t.throw,
+      'catch': t.catch,
+      'charge': t.charge,
+      'dash': t.dash,
+      'powerup_triple': t.powerupTriple,
+      'powerup_big': t.powerupBig,
+      'powerup_speed': t.powerupSpeed,
+      'powerup_shield': t.powerupShield,
+      'powerup_magnet': t.powerupMagnet,
+      'kill': t.kill,
+      'complete': t.complete,
+    };
+
+    const stepDescs: Record<string, string> = {
+      'intro': t.introDesc,
+      'move': t.moveDesc,
+      'throw': t.throwDesc,
+      'catch': t.catchDesc,
+      'charge': t.chargeDesc,
+      'dash': t.dashDesc,
+      'powerup_triple': t.powerupTripleDesc,
+      'powerup_big': t.powerupBigDesc,
+      'powerup_speed': t.powerupSpeedDesc,
+      'powerup_shield': t.powerupShieldDesc,
+      'powerup_magnet': t.powerupMagnetDesc,
+      'kill': t.killDesc,
+      'complete': t.completeDesc,
+    };
+
+    const title = stepTitles[step.type] || step.type;
+    const desc = stepDescs[step.type] || '';
+
+    // 标题
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 28px "Segoe UI", system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(title, W / 2, 30);
+
+    // 底部提示框
+    const hintBoxHeight = 100;
+    const hintBoxY = H - hintBoxHeight;
+
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(0, hintBoxY, W, hintBoxHeight);
+
+    // 描述文字
+    ctx.fillStyle = '#fff';
+    ctx.font = '22px "Segoe UI", system-ui, sans-serif';
+    ctx.fillText(desc, W / 2, hintBoxY + 35);
+
+    // 步骤完成状态
+    if (TutorialState.stepCompleted) {
+      // 完成提示
+      ctx.fillStyle = '#4caf50';
+      ctx.font = 'bold 20px "Segoe UI", system-ui, sans-serif';
+      ctx.fillText(t.stepComplete + ' ' + t.pressAnyButton, W / 2, hintBoxY + 70);
+    } else {
+      // 跳过提示
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+      ctx.font = '16px "Segoe UI", system-ui, sans-serif';
+      ctx.fillText(t.skip, W / 2, hintBoxY + 70);
+    }
+
+    // 步骤指示点
+    const dotSize = 10;
+    const dotSpacing = 20;
+    const totalDotsWidth = TUTORIAL_STEPS.length * dotSpacing;
+    const dotsStartX = (W - totalDotsWidth) / 2;
+
+    for (let i = 0; i < TUTORIAL_STEPS.length; i++) {
+      const dotX = dotsStartX + i * dotSpacing + dotSize / 2;
+      const dotY = progressBarY - 20;
+
+      ctx.beginPath();
+      ctx.arc(dotX, dotY, dotSize / 2, 0, Math.PI * 2);
+
+      if (i < TutorialState.currentStepIndex) {
+        ctx.fillStyle = '#4caf50'; // 已完成 - 绿色
+      } else if (i === TutorialState.currentStepIndex) {
+        ctx.fillStyle = '#4fc3f7'; // 当前 - 蓝色
+      } else {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)'; // 未完成 - 灰色
+      }
+      ctx.fill();
+    }
+
+    ctx.restore();
   }
 
   /**

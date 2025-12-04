@@ -31,6 +31,11 @@ export interface PlayerData {
   shapeIndex?: number;   // 形状索引
   teamIndex?: number;    // 队伍索引 (-1 = Solo)
   gamepadIndex: number;  // -1 表示未分配, -2 表示 CPU
+  // 状态效果
+  frozen: boolean;       // 是否被冰冻
+  frozenTimer: number;   // 冰冻剩余时间
+  burning: boolean;      // 是否在燃烧
+  burnTimer: number;     // 燃烧剩余时间
 }
 
 // 回旋镖特有组件
@@ -45,6 +50,11 @@ export interface BoomerangData {
   isBig: boolean;
   rotation: number;
   trailTimer: number;
+  // 新道具效果
+  hasFreeze: boolean;    // 冰冻效果
+  hasFire: boolean;      // 火焰效果（留下火焰轨迹）
+  canPenetrate: boolean; // 穿透墙壁
+  extendedRange: boolean; // 延长射程
 }
 
 // 道具特有组件
@@ -97,6 +107,21 @@ export interface FloatingTextData {
   life: number;
 }
 
+// 火焰轨迹组件
+export interface FireTrailData {
+  life: number;
+  maxLife: number;
+  ownerId: number;  // 谁放的火
+  damage: boolean;  // 是否可以造成伤害
+}
+
+// 冰冻轨迹组件
+export interface IceTrailData {
+  life: number;
+  maxLife: number;
+  ownerId: number;  // 谁放的冰
+}
+
 // 扩展的游戏实体
 export interface GameEntity extends BaseEntity {
   // 自定义组件
@@ -108,6 +133,8 @@ export interface GameEntity extends BaseEntity {
   trail?: TrailData;
   ring?: RingData;
   floatingText?: FloatingTextData;
+  fireTrail?: FireTrailData;
+  iceTrail?: IceTrailData;
 }
 
 // 实体类型常量
@@ -119,5 +146,7 @@ export const EntityTags = {
   PARTICLE: 'particle',
   TRAIL: 'trail',
   RING: 'ring',
-  FLOATING_TEXT: 'floatingText'
+  FLOATING_TEXT: 'floatingText',
+  FIRE_TRAIL: 'fireTrail',
+  ICE_TRAIL: 'iceTrail'
 } as const;
