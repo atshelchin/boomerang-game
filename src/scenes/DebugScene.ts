@@ -13,8 +13,7 @@ import {
   createIceTerrain,
   createWaterTerrain,
   createPortal,
-  createBoulderSpawner,
-  createPoisonZone
+  createBoulderSpawner
 } from '../entities/factories';
 import {
   DESIGN_WIDTH,

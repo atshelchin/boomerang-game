@@ -278,7 +278,7 @@ export class TerrainSystem extends System {
 
   private killPlayerByBoulder(
     player: GameEntity & { player: PlayerData },
-    boulder: GameEntity & { boulder: BoulderData }
+    _boulder: GameEntity & { boulder: BoulderData }
   ): void {
     if (!player.transform) return;
 
