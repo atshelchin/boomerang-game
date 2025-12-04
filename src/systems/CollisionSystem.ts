@@ -5,7 +5,7 @@
  */
 
 import { System, InputSystem, MatterPhysicsSystem } from 'you-engine';
-import type { GameEntity, PlayerData, BoomerangData, PowerupData, WallData, FireTrailData } from '../entities/types';
+import type { GameEntity, PlayerData, BoomerangData, PowerupData, WallData, FireTrailData, IceTrailData } from '../entities/types';
 import { EntityTags } from '../entities/types';
 import { POWERUP_CONFIG } from '../config/GameConfig';
 import { createRing, spawnParticles, createFloatingText, createParticle } from '../entities/factories';
@@ -80,8 +80,17 @@ export class CollisionSystem extends System {
         !!(e.tags?.values.includes(EntityTags.FIRE_TRAIL)) && e.fireTrail !== undefined
     );
 
+    // 冰冻轨迹
+    const iceTrails = this.engine.world.entities.filter(
+      (e): e is GameEntity & { iceTrail: IceTrailData } =>
+        !!(e.tags?.values.includes(EntityTags.ICE_TRAIL)) && e.iceTrail !== undefined
+    );
+
     // 玩家和火焰轨迹碰撞
     this.handleFireTrailCollisions(players, fireTrails);
+
+    // 玩家和冰冻轨迹碰撞
+    this.handleIceTrailCollisions(players, iceTrails);
   }
 
   private handlePlayerPlayerCollisions(
@@ -841,5 +850,34 @@ export class CollisionSystem extends System {
       x: victim.transform?.x ?? 0,
       y: victim.transform?.y ?? 0
     });
+  }
+
+  /** 处理冰冻轨迹碰撞 */
+  private handleIceTrailCollisions(
+    players: Array<GameEntity & { player: PlayerData }>,
+    iceTrails: Array<GameEntity & { iceTrail: IceTrailData }>
+  ): void {
+    for (const iceTrail of iceTrails) {
+      if (!iceTrail.transform || !iceTrail.collider) continue;
+
+      const iRadius = iceTrail.collider.radius ?? 18;
+
+      for (const player of players) {
+        if (!player.player.alive || !player.transform || !player.collider) continue;
+        // 冰冻轨迹不伤害自己
+        if (player.player.playerId === iceTrail.iceTrail.ownerId) continue;
+        // 已经被冰冻的玩家不重复触发
+        if (player.player.frozen) continue;
+
+        const pRadius = player.collider.radius ?? 28;
+        const dx = iceTrail.transform.x - player.transform.x;
+        const dy = iceTrail.transform.y - player.transform.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist < iRadius + pRadius) {
+          this.freezePlayer(player, iceTrail.iceTrail.ownerId);
+        }
+      }
+    }
   }
 }

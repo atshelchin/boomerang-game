@@ -14,7 +14,8 @@ import type {
   TrailData,
   RingData,
   FloatingTextData,
-  FireTrailData
+  FireTrailData,
+  IceTrailData
 } from '../entities/types';
 import { EntityTags } from '../entities/types';
 import { PLAYER_CONFIG, BOOMERANG_CONFIG, POWERUP_COLORS, PLAYER_SKINS, GameSettings, CHARACTER_COLORS, CHARACTER_SHAPES, TEAM_COLORS } from '../config/GameConfig';
@@ -42,18 +43,20 @@ export class GameRenderSystem extends System {
     // 1. 轨迹
     // 2. 墙体
     // 3. 火焰轨迹
-    // 4. 道具
-    // 5. 粒子
-    // 6. 回旋镖
-    // 7. 玩家
-    // 8. 环形效果
-    // 9. 浮动文字
-    // 10. UI元素
+    // 4. 冰冻轨迹
+    // 5. 道具
+    // 6. 粒子
+    // 7. 回旋镖
+    // 8. 玩家
+    // 9. 环形效果
+    // 10. 浮动文字
+    // 11. UI元素
 
     this.renderBoundary(ctx);
     this.renderTrails(ctx);
     this.renderWalls(ctx);
     this.renderFireTrails(ctx);
+    this.renderIceTrails(ctx);
     this.renderPowerups(ctx);
     this.renderParticles(ctx);
     this.renderBoomerangs(ctx);
@@ -285,6 +288,62 @@ export class GameRenderSystem extends System {
       ctx.fillStyle = '#ff0';
       ctx.beginPath();
       ctx.arc(0, 0, radius * 0.4, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    }
+  }
+
+  private renderIceTrails(ctx: CanvasRenderingContext2D): void {
+    const iceTrails = this.engine.world.entities.filter(
+      (e): e is GameEntity & { iceTrail: IceTrailData } =>
+        !!(e.tags?.values.includes(EntityTags.ICE_TRAIL)) && e.iceTrail !== undefined
+    );
+
+    for (const iceTrail of iceTrails) {
+      if (!iceTrail.transform) continue;
+
+      const { iceTrail: it, transform } = iceTrail;
+      const lifeRatio = it.life / it.maxLife;
+      const radius = 18 + (1 - lifeRatio) * 3; // 逐渐扩大
+
+      ctx.save();
+      ctx.translate(transform.x, transform.y);
+
+      // 冰冻发光效果
+      ctx.shadowColor = '#88f';
+      ctx.shadowBlur = 15 * lifeRatio;
+
+      // 冰冻渐变
+      const iceGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
+      iceGrad.addColorStop(0, `rgba(200, 230, 255, ${lifeRatio * 0.8})`);
+      iceGrad.addColorStop(0.4, `rgba(150, 200, 255, ${lifeRatio * 0.6})`);
+      iceGrad.addColorStop(0.7, `rgba(100, 150, 255, ${lifeRatio * 0.4})`);
+      iceGrad.addColorStop(1, `rgba(80, 120, 255, 0)`);
+
+      ctx.fillStyle = iceGrad;
+      ctx.beginPath();
+      ctx.arc(0, 0, radius, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 冰晶纹理
+      ctx.globalAlpha = lifeRatio * 0.6;
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1;
+      for (let i = 0; i < 6; i++) {
+        const angle = (i / 6) * Math.PI * 2 + GameState.time * 0.02;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(Math.cos(angle) * radius * 0.7, Math.sin(angle) * radius * 0.7);
+        ctx.stroke();
+      }
+
+      // 中心亮点闪烁
+      const shimmer = Math.sin(GameState.time * 0.3 + transform.x * 0.1) * 0.3 + 0.7;
+      ctx.globalAlpha = lifeRatio * shimmer;
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.arc(0, 0, radius * 0.25, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.restore();
