@@ -87,9 +87,9 @@ export class MenuScene extends Scene {
             document.getElementById('mainMenu')!.style.display = 'none';
             document.getElementById('settingsPanel')?.classList.remove('hidden');
             break;
-          case 'tutorial':
-            GameSettings.gameMode = 'tutorial';
-            this.engine.goto('tutorial');
+          case 'debug':
+            GameSettings.gameMode = 'tutorial';  // 复用 tutorial 模式的状态
+            this.engine.goto('debug');
             break;
           case 'start':
           default:
@@ -225,10 +225,10 @@ export class MenuScene extends Scene {
           this.inSettings = true;
           document.getElementById('mainMenu')!.style.display = 'none';
           document.getElementById('settingsPanel')?.classList.remove('hidden');
-        } else if (mode === 'tutorial') {
+        } else if (mode === 'debug') {
           window.initAudio();
           GameSettings.gameMode = 'tutorial';
-          this.engine.goto('tutorial');
+          this.engine.goto('debug');
         } else if (mode === 'start') {
           window.initAudio();
           this.engine.goto('select');
@@ -320,7 +320,7 @@ export class MenuScene extends Scene {
 
     // 主菜单按钮 (全屏按钮保持不变)
     const menuBtns = document.querySelectorAll('#mainMenu .menu-btn:not(#fullscreenBtn)');
-    const menuTexts = [t.menu.start, t.menu.tutorial, t.menu.settings];
+    const menuTexts = [t.menu.start, t.menu.debug || '调试模式', t.menu.settings];
     menuBtns.forEach((btn, i) => {
       if (menuTexts[i]) btn.textContent = menuTexts[i];
     });

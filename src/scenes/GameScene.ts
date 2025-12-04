@@ -295,13 +295,13 @@ export class GameScene extends Scene {
     const confirm = this.input.isReleased('action') || this.input.isReleased('action', 1);
 
     if (Math.abs(moveY) > 0.5) {
-      this.pauseMenuIndex = (this.pauseMenuIndex + (moveY > 0 ? 1 : -1) + 3) % 3;
+      this.pauseMenuIndex = (this.pauseMenuIndex + (moveY > 0 ? 1 : -1) + 5) % 5;
       this.updatePauseMenuUI();
       this.menuCooldown = 12;
     }
 
     if (confirm || this.input.isPressed('pause')) {
-      const actions = ['resume', 'restart', 'mainmenu'];
+      const actions = ['resume', 'fullscreen', 'screenshot', 'restart', 'mainmenu'];
       this.handlePauseAction(actions[this.pauseMenuIndex]);
       this.menuCooldown = 15;
     }
@@ -599,6 +599,11 @@ export class GameScene extends Scene {
       this.pauseMenuIndex = 0;
       document.getElementById('pauseScreen')?.classList.remove('hidden');
       this.updatePauseMenuUI();
+      // 更新全屏按钮文字
+      const fullscreenBtn = document.getElementById('fullscreenBtn');
+      if (fullscreenBtn) {
+        fullscreenBtn.textContent = document.fullscreenElement ? '退出全屏' : '全屏模式';
+      }
     } else {
       // 从暂停恢复到之前的状态
       GameState.state = this.stateBeforePause as typeof GameState.state;
@@ -611,6 +616,12 @@ export class GameScene extends Scene {
     switch (action) {
       case 'resume':
         this.togglePause();
+        break;
+      case 'fullscreen':
+        this.toggleFullscreen();
+        break;
+      case 'screenshot':
+        this.takeScreenshot();
         break;
       case 'restart':
         document.getElementById('pauseScreen')?.classList.add('hidden');
@@ -626,6 +637,57 @@ export class GameScene extends Scene {
         this.engine.goto('menu');
         break;
     }
+  }
+
+  private toggleFullscreen(): void {
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().then(() => {
+        if (fullscreenBtn) fullscreenBtn.textContent = '退出全屏';
+      }).catch(() => {
+        // Fullscreen request failed
+      });
+    } else {
+      document.exitFullscreen().then(() => {
+        if (fullscreenBtn) fullscreenBtn.textContent = '全屏模式';
+      }).catch(() => {
+        // Exit fullscreen failed
+      });
+    }
+  }
+
+  private takeScreenshot(): void {
+    // 获取游戏画布
+    const canvas = document.querySelector('canvas');
+    if (!canvas) {
+      window.showMessage?.('截图失败');
+      return;
+    }
+
+    // 先隐藏暂停菜单
+    const pauseScreen = document.getElementById('pauseScreen');
+    pauseScreen?.classList.add('hidden');
+
+    // 等待一帧让画面更新
+    requestAnimationFrame(() => {
+      try {
+        // 获取画布数据
+        const dataUrl = canvas.toDataURL('image/png');
+
+        // 创建下载链接
+        const link = document.createElement('a');
+        link.download = `boomerang-${Date.now()}.png`;
+        link.href = dataUrl;
+        link.click();
+
+        window.showMessage?.('截图已保存');
+      } catch (e) {
+        window.showMessage?.('截图失败');
+      }
+
+      // 恢复暂停菜单
+      pauseScreen?.classList.remove('hidden');
+    });
   }
 
   private handleWinAction(action: string): void {

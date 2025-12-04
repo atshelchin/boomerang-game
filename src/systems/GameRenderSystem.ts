@@ -15,7 +15,11 @@ import type {
   RingData,
   FloatingTextData,
   FireTrailData,
-  IceTrailData
+  IceTrailData,
+  TerrainData,
+  PortalData,
+  BoulderData,
+  PoisonZoneData
 } from '../entities/types';
 import { EntityTags } from '../entities/types';
 import { PLAYER_CONFIG, BOOMERANG_CONFIG, POWERUP_COLORS, PLAYER_SKINS, GameSettings, CHARACTER_COLORS, CHARACTER_SHAPES, TEAM_COLORS } from '../config/GameConfig';
@@ -40,24 +44,32 @@ export class GameRenderSystem extends System {
 
     // 渲染顺序：
     // 0. 边界
-    // 1. 轨迹
-    // 2. 墙体
-    // 3. 火焰轨迹
-    // 4. 冰冻轨迹
-    // 5. 道具
-    // 6. 粒子
-    // 7. 回旋镖
-    // 8. 玩家
-    // 9. 环形效果
-    // 10. 浮动文字
-    // 11. UI元素
+    // 1. 毒圈（最底层）
+    // 2. 地形（冰面、水面）
+    // 3. 轨迹
+    // 4. 墙体
+    // 5. 火焰轨迹
+    // 6. 冰冻轨迹
+    // 7. 传送门
+    // 8. 道具
+    // 9. 滚石
+    // 10. 粒子
+    // 11. 回旋镖
+    // 12. 玩家
+    // 13. 环形效果
+    // 14. 浮动文字
+    // 15. UI元素
 
     this.renderBoundary(ctx);
+    this.renderPoisonZones(ctx);
+    this.renderTerrains(ctx);
     this.renderTrails(ctx);
     this.renderWalls(ctx);
     this.renderFireTrails(ctx);
     this.renderIceTrails(ctx);
+    this.renderPortals(ctx);
     this.renderPowerups(ctx);
+    this.renderBoulders(ctx);
     this.renderParticles(ctx);
     this.renderBoomerangs(ctx);
     this.renderPlayers(ctx);
@@ -2140,5 +2152,329 @@ export class GameRenderSystem extends System {
 
     // 转回十六进制
     return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+  }
+
+  /**
+   * 渲染地形（冰面、水面）
+   */
+  private renderTerrains(ctx: CanvasRenderingContext2D): void {
+    const terrains = this.engine.world.entities.filter(
+      (e): e is GameEntity & { terrain: TerrainData } =>
+        !!(e.tags?.values.includes(EntityTags.TERRAIN)) && e.terrain !== undefined
+    );
+
+    for (const terrain of terrains) {
+      if (!terrain.transform || !terrain.terrain) continue;
+
+      const { terrain: t, transform } = terrain;
+      const halfW = t.width / 2;
+      const halfH = t.height / 2;
+
+      ctx.save();
+      ctx.translate(transform.x, transform.y);
+
+      if (t.type === 'ice') {
+        // 冰面渲染 - 淡蓝色半透明
+        const iceGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, Math.max(halfW, halfH));
+        iceGrad.addColorStop(0, 'rgba(180, 220, 255, 0.6)');
+        iceGrad.addColorStop(0.7, 'rgba(150, 200, 255, 0.4)');
+        iceGrad.addColorStop(1, 'rgba(120, 180, 255, 0.2)');
+
+        ctx.fillStyle = iceGrad;
+        ctx.fillRect(-halfW, -halfH, t.width, t.height);
+
+        // 冰晶纹理
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.lineWidth = 1;
+        const gridSize = 40;
+        for (let x = -halfW; x < halfW; x += gridSize) {
+          for (let y = -halfH; y < halfH; y += gridSize) {
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + gridSize * 0.7, y + gridSize * 0.3);
+            ctx.stroke();
+          }
+        }
+
+        // 边框
+        ctx.strokeStyle = 'rgba(150, 200, 255, 0.5)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(-halfW, -halfH, t.width, t.height);
+
+      } else if (t.type === 'water') {
+        // 水面渲染 - 深蓝色带波纹
+        const waterGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, Math.max(halfW, halfH));
+        waterGrad.addColorStop(0, 'rgba(30, 80, 150, 0.9)');
+        waterGrad.addColorStop(0.5, 'rgba(20, 60, 120, 0.85)');
+        waterGrad.addColorStop(1, 'rgba(10, 40, 100, 0.8)');
+
+        ctx.fillStyle = waterGrad;
+        ctx.fillRect(-halfW, -halfH, t.width, t.height);
+
+        // 波纹效果
+        ctx.strokeStyle = 'rgba(100, 180, 255, 0.3)';
+        ctx.lineWidth = 2;
+        const waveTime = GameState.time * 0.05;
+        for (let i = 0; i < 3; i++) {
+          const waveRadius = 30 + i * 40 + Math.sin(waveTime + i) * 10;
+          ctx.globalAlpha = 0.3 - i * 0.08;
+          ctx.beginPath();
+          ctx.arc(0, 0, waveRadius, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+
+        // 危险边框
+        ctx.strokeStyle = '#f44';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([10, 5]);
+        ctx.strokeRect(-halfW, -halfH, t.width, t.height);
+        ctx.setLineDash([]);
+      }
+
+      ctx.restore();
+    }
+  }
+
+  /**
+   * 渲染传送门
+   */
+  private renderPortals(ctx: CanvasRenderingContext2D): void {
+    const portals = this.engine.world.entities.filter(
+      (e): e is GameEntity & { portal: PortalData } =>
+        !!(e.tags?.values.includes(EntityTags.PORTAL)) && e.portal !== undefined
+    );
+
+    for (const portal of portals) {
+      if (!portal.transform || !portal.portal) continue;
+
+      const { portal: p, transform } = portal;
+
+      ctx.save();
+      ctx.translate(transform.x, transform.y);
+
+      // 外圈发光
+      ctx.shadowColor = p.color;
+      ctx.shadowBlur = 30;
+
+      // 旋转的外环
+      ctx.save();
+      ctx.rotate(p.rotation);
+      ctx.strokeStyle = p.color;
+      ctx.lineWidth = 4;
+      ctx.globalAlpha = 0.8;
+      ctx.beginPath();
+      ctx.arc(0, 0, p.radius + 8, 0, Math.PI * 1.5);
+      ctx.stroke();
+      ctx.restore();
+
+      // 内环（反向旋转）
+      ctx.save();
+      ctx.rotate(-p.rotation * 1.5);
+      ctx.strokeStyle = p.color;
+      ctx.lineWidth = 3;
+      ctx.globalAlpha = 0.6;
+      ctx.beginPath();
+      ctx.arc(0, 0, p.radius - 5, Math.PI * 0.3, Math.PI * 1.8);
+      ctx.stroke();
+      ctx.restore();
+
+      // 中心漩涡
+      const vortexGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, p.radius);
+      vortexGrad.addColorStop(0, p.color);
+      vortexGrad.addColorStop(0.5, p.color + '80');
+      vortexGrad.addColorStop(1, 'transparent');
+
+      ctx.fillStyle = vortexGrad;
+      ctx.globalAlpha = 0.5 + Math.sin(GameState.time * 0.1) * 0.2;
+      ctx.beginPath();
+      ctx.arc(0, 0, p.radius, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 中心亮点
+      ctx.fillStyle = '#fff';
+      ctx.globalAlpha = 0.8 + Math.sin(GameState.time * 0.15) * 0.2;
+      ctx.beginPath();
+      ctx.arc(0, 0, 5, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.shadowBlur = 0;
+      ctx.restore();
+    }
+  }
+
+  /**
+   * 渲染滚石
+   */
+  private renderBoulders(ctx: CanvasRenderingContext2D): void {
+    const boulders = this.engine.world.entities.filter(
+      (e): e is GameEntity & { boulder: BoulderData } =>
+        !!(e.tags?.values.includes(EntityTags.BOULDER)) && e.boulder !== undefined
+    );
+
+    for (const boulder of boulders) {
+      if (!boulder.transform || !boulder.boulder) continue;
+
+      const { boulder: b, transform } = boulder;
+
+      ctx.save();
+      ctx.translate(transform.x, transform.y);
+
+      if (b.active) {
+        // 活动滚石 - 滚动的大石头
+        const rollAngle = GameState.time * 0.2;
+
+        // 阴影
+        ctx.fillStyle = 'rgba(0,0,0,0.4)';
+        ctx.beginPath();
+        ctx.ellipse(5, 8, b.radius * 0.9, b.radius * 0.4, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 石头主体
+        ctx.save();
+        ctx.rotate(rollAngle);
+
+        const stoneGrad = ctx.createRadialGradient(-b.radius * 0.3, -b.radius * 0.3, 0, 0, 0, b.radius);
+        stoneGrad.addColorStop(0, '#8b7355');
+        stoneGrad.addColorStop(0.5, '#6b5344');
+        stoneGrad.addColorStop(1, '#4a3a2a');
+
+        ctx.fillStyle = stoneGrad;
+        ctx.beginPath();
+        ctx.arc(0, 0, b.radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 石头纹理
+        ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(-b.radius * 0.5, -b.radius * 0.3);
+        ctx.lineTo(b.radius * 0.2, b.radius * 0.1);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(b.radius * 0.3, -b.radius * 0.5);
+        ctx.lineTo(-b.radius * 0.1, b.radius * 0.4);
+        ctx.stroke();
+
+        // 高光
+        ctx.fillStyle = 'rgba(255,255,255,0.2)';
+        ctx.beginPath();
+        ctx.ellipse(-b.radius * 0.3, -b.radius * 0.3, b.radius * 0.3, b.radius * 0.2, -0.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+
+        // 滚动尘土效果
+        ctx.fillStyle = 'rgba(139, 115, 85, 0.3)';
+        for (let i = 0; i < 3; i++) {
+          const dustX = -b.direction.x * (20 + i * 15);
+          const dustY = -b.direction.y * (20 + i * 15) + Math.sin(GameState.time * 0.3 + i) * 5;
+          const dustSize = 8 - i * 2;
+          ctx.beginPath();
+          ctx.arc(dustX, dustY, dustSize, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else {
+        // 发射器 - 显示为凹槽/洞口
+        ctx.fillStyle = 'rgba(50, 40, 30, 0.8)';
+        ctx.beginPath();
+        ctx.ellipse(0, 0, b.radius * 0.8, b.radius * 0.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 发射指示（箭头）
+        ctx.strokeStyle = 'rgba(255, 100, 100, 0.5)';
+        ctx.lineWidth = 2;
+        const arrowLen = 30;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(b.direction.x * arrowLen, b.direction.y * arrowLen);
+        ctx.stroke();
+
+        // 倒计时指示
+        const chargeRatio = 1 - (b.spawnTimer / b.spawnInterval);
+        if (chargeRatio > 0.5) {
+          ctx.strokeStyle = `rgba(255, ${Math.floor(255 - chargeRatio * 200)}, 0, ${chargeRatio})`;
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(0, 0, b.radius * 0.6, -Math.PI / 2, -Math.PI / 2 + chargeRatio * Math.PI * 2);
+          ctx.stroke();
+        }
+      }
+
+      ctx.restore();
+    }
+  }
+
+  /**
+   * 渲染毒圈
+   */
+  private renderPoisonZones(ctx: CanvasRenderingContext2D): void {
+    const poisonZones = this.engine.world.entities.filter(
+      (e): e is GameEntity & { poisonZone: PoisonZoneData } =>
+        !!(e.tags?.values.includes(EntityTags.POISON_ZONE)) && e.poisonZone !== undefined
+    );
+
+    for (const zone of poisonZones) {
+      if (!zone.poisonZone) continue;
+
+      const pz = zone.poisonZone;
+
+      ctx.save();
+
+      // 毒圈外的区域（危险区）- 用填充整个画布然后切掉安全区的方式
+      ctx.fillStyle = 'rgba(128, 0, 128, 0.3)';
+      ctx.beginPath();
+      ctx.rect(0, 0, this.engine.width, this.engine.height);
+      ctx.arc(pz.centerX, pz.centerY, pz.currentRadius, 0, Math.PI * 2, true);
+      ctx.fill();
+
+      // 毒圈边界 - 脉动效果
+      const pulseRadius = pz.currentRadius + Math.sin(GameState.time * 0.1) * 5;
+      const pulseAlpha = 0.6 + Math.sin(GameState.time * 0.15) * 0.2;
+
+      ctx.strokeStyle = `rgba(180, 0, 180, ${pulseAlpha})`;
+      ctx.lineWidth = 6;
+      ctx.shadowColor = '#a0f';
+      ctx.shadowBlur = 20;
+      ctx.beginPath();
+      ctx.arc(pz.centerX, pz.centerY, pulseRadius, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // 内层边界
+      ctx.strokeStyle = 'rgba(200, 100, 255, 0.8)';
+      ctx.lineWidth = 2;
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.arc(pz.centerX, pz.centerY, pz.currentRadius - 5, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // 目标圈（如果正在收缩）
+      if (pz.currentRadius > pz.targetRadius + 10) {
+        ctx.setLineDash([15, 10]);
+        ctx.strokeStyle = 'rgba(255, 50, 50, 0.5)';
+        ctx.lineWidth = 2;
+        ctx.shadowBlur = 0;
+        ctx.beginPath();
+        ctx.arc(pz.centerX, pz.centerY, pz.targetRadius, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // 毒气粒子效果（在边界上）
+      ctx.fillStyle = 'rgba(180, 50, 255, 0.6)';
+      for (let i = 0; i < 20; i++) {
+        const angle = (i / 20) * Math.PI * 2 + GameState.time * 0.02;
+        const wobble = Math.sin(GameState.time * 0.1 + i * 0.5) * 15;
+        const px = pz.centerX + Math.cos(angle) * (pz.currentRadius + wobble);
+        const py = pz.centerY + Math.sin(angle) * (pz.currentRadius + wobble);
+        const size = 4 + Math.sin(GameState.time * 0.2 + i) * 2;
+
+        ctx.beginPath();
+        ctx.arc(px, py, size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.restore();
+    }
   }
 }

@@ -15,6 +15,7 @@ export interface Translations {
     pvp: string;
     pve: string;
     tutorial: string;
+    debug: string;
     settings: string;
   };
 
@@ -142,6 +143,7 @@ const zh: Translations = {
     pvp: '双人对战',
     pve: '单人模式',
     tutorial: '教程',
+    debug: '调试模式',
     settings: '设置',
   },
 
@@ -260,6 +262,7 @@ const en: Translations = {
     pvp: '2P Battle',
     pve: 'Single Player',
     tutorial: 'Tutorial',
+    debug: 'Debug Mode',
     settings: 'Settings',
   },
 
@@ -378,6 +381,7 @@ const ja: Translations = {
     pvp: '2Pバトル',
     pve: 'シングルプレイ',
     tutorial: 'チュートリアル',
+    debug: 'デバッグモード',
     settings: '設定',
   },
 

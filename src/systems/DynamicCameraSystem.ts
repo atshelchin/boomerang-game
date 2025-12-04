@@ -12,23 +12,24 @@ import { GameState } from '../config/GameState';
 // 摄像机配置
 export const CAMERA_CONFIG = {
   // 最小和最大缩放
-  minZoom: 0.6,
-  maxZoom: 1.2,
-  defaultZoom: 1.0,
+  minZoom: 0.45,
+  maxZoom: 0.9,
+  defaultZoom: 0.7,
 
   // 玩家边距（屏幕边缘到玩家的最小距离）
-  playerPadding: 180,
+  playerPadding: 250,
 
   // 平滑参数
-  positionLerp: 0.08,  // 位置平滑系数
-  zoomLerp: 0.05,       // 缩放平滑系数
+  positionLerp: 0.04,  // 位置平滑系数（更慢更稳定）
+  zoomLerp: 0.03,       // 缩放平滑系数（更慢更稳定）
 
-  // 击杀时的特写效果
-  killZoom: 1.4,
-  killZoomDuration: 30,
+  // 击杀时的效果 - 缩小显示全场
+  killZoom: 0.5,
+  killZoomDuration: 45,
 
-  // 震动效果（额外的摄像机震动）
-  shakeDecay: 0.92,
+  // 震动效果（减弱）
+  shakeDecay: 0.85,
+  shakeMultiplier: 0.3,  // 震动幅度缩减
 };
 
 export class DynamicCameraSystem extends System {
@@ -46,8 +47,6 @@ export class DynamicCameraSystem extends System {
 
   // 特写效果
   private killFocusTimer = 0;
-  private killFocusX = 0;
-  private killFocusY = 0;
 
   // 是否启用动态摄像机（使用不同名称避免与基类冲突）
   private dynamicEnabled = true;
@@ -91,9 +90,9 @@ export class DynamicCameraSystem extends System {
     this.currentX = Math.max(halfW - margin, Math.min(DESIGN_WIDTH - halfW + margin, this.currentX));
     this.currentY = Math.max(halfH - margin, Math.min(DESIGN_HEIGHT - halfH + margin, this.currentY));
 
-    // 应用震动效果
-    const shakeX = GameState.shake.x;
-    const shakeY = GameState.shake.y;
+    // 应用震动效果（减弱）
+    const shakeX = GameState.shake.x * CAMERA_CONFIG.shakeMultiplier;
+    const shakeY = GameState.shake.y * CAMERA_CONFIG.shakeMultiplier;
 
     // 更新摄像机（直接设置值避免双重平滑）
     this.camera.x = this.currentX + shakeX;
@@ -158,30 +157,33 @@ export class DynamicCameraSystem extends System {
     }
   }
 
-  /** 更新击杀特写 */
+  /** 更新击杀特写 - 缩小显示全场 */
   private updateKillFocus(): void {
     this.killFocusTimer--;
 
-    // 特写位置
-    this.targetX = this.killFocusX;
-    this.targetY = this.killFocusY;
+    // 击杀时居中显示整个场地
+    this.targetX = DESIGN_WIDTH / 2;
+    this.targetY = DESIGN_HEIGHT / 2;
 
-    // 根据时间调整缩放
+    // 根据时间调整缩放 - 先缩小后恢复
     const progress = this.killFocusTimer / CAMERA_CONFIG.killZoomDuration;
-    if (progress > 0.5) {
-      // 前半段：放大
-      this.targetZoom = CAMERA_CONFIG.defaultZoom + (CAMERA_CONFIG.killZoom - CAMERA_CONFIG.defaultZoom) * (1 - progress) * 2;
+    if (progress > 0.6) {
+      // 前40%：快速缩小到显示全场
+      const t = (1 - progress) / 0.4;
+      this.targetZoom = CAMERA_CONFIG.defaultZoom + (CAMERA_CONFIG.killZoom - CAMERA_CONFIG.defaultZoom) * t;
+    } else if (progress > 0.2) {
+      // 中间40%：保持缩小状态
+      this.targetZoom = CAMERA_CONFIG.killZoom;
     } else {
-      // 后半段：恢复
-      this.targetZoom = CAMERA_CONFIG.killZoom - (CAMERA_CONFIG.killZoom - CAMERA_CONFIG.defaultZoom) * (1 - progress * 2);
+      // 后20%：缓慢恢复
+      const t = progress / 0.2;
+      this.targetZoom = CAMERA_CONFIG.defaultZoom + (CAMERA_CONFIG.killZoom - CAMERA_CONFIG.defaultZoom) * t;
     }
   }
 
-  /** 触发击杀特写效果 */
-  triggerKillFocus(x: number, y: number): void {
+  /** 触发击杀特写效果 - 缩小显示全场 */
+  triggerKillFocus(_x?: number, _y?: number): void {
     this.killFocusTimer = CAMERA_CONFIG.killZoomDuration;
-    this.killFocusX = x;
-    this.killFocusY = y;
   }
 
   /** 启用/禁用动态摄像机 */

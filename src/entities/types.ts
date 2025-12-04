@@ -122,6 +122,50 @@ export interface IceTrailData {
   ownerId: number;  // 谁放的冰
 }
 
+// 地形区域组件
+export interface TerrainData {
+  type: 'ice' | 'water' | 'poison';
+  width: number;
+  height: number;
+  // 冰面特有
+  friction?: number;
+  // 毒圈特有
+  damage?: number;
+  damageInterval?: number;
+  damageTimer?: number;
+}
+
+// 传送门组件
+export interface PortalData {
+  id: number;           // 传送门ID
+  linkedPortalId: number;  // 链接的另一个传送门ID
+  radius: number;
+  color: string;
+  cooldown: number;     // 传送冷却
+  rotation: number;     // 旋转动画
+}
+
+// 滚石陷阱组件
+export interface BoulderData {
+  direction: { x: number; y: number };
+  speed: number;
+  radius: number;
+  active: boolean;
+  spawnTimer: number;
+  spawnInterval: number;
+}
+
+// 毒圈组件
+export interface PoisonZoneData {
+  currentRadius: number;
+  targetRadius: number;
+  shrinkSpeed: number;
+  damage: number;
+  damageInterval: number;
+  centerX: number;
+  centerY: number;
+}
+
 // 扩展的游戏实体
 export interface GameEntity extends BaseEntity {
   // 自定义组件
@@ -135,6 +179,10 @@ export interface GameEntity extends BaseEntity {
   floatingText?: FloatingTextData;
   fireTrail?: FireTrailData;
   iceTrail?: IceTrailData;
+  terrain?: TerrainData;
+  portal?: PortalData;
+  boulder?: BoulderData;
+  poisonZone?: PoisonZoneData;
 }
 
 // 实体类型常量
@@ -148,5 +196,9 @@ export const EntityTags = {
   RING: 'ring',
   FLOATING_TEXT: 'floatingText',
   FIRE_TRAIL: 'fireTrail',
-  ICE_TRAIL: 'iceTrail'
+  ICE_TRAIL: 'iceTrail',
+  TERRAIN: 'terrain',
+  PORTAL: 'portal',
+  BOULDER: 'boulder',
+  POISON_ZONE: 'poisonZone'
 } as const;

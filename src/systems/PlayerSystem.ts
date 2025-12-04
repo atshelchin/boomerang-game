@@ -10,6 +10,7 @@ import { createBoomerang, createTrail, spawnParticles } from '../entities/factor
 import { PLAYER_CONFIG, BOOMERANG_CONFIG, PLAYER_SKINS, GameSettings, POWERUP_CONFIG } from '../config/GameConfig';
 import { GameState, Stats } from '../config/GameState';
 import { createParticle } from '../entities/factories';
+import { TerrainSystem } from './TerrainSystem';
 
 export class PlayerSystem extends System {
   static priority = 10;
@@ -190,8 +191,10 @@ export class PlayerSystem extends System {
       player.chargeTime = 0;
     }
 
-    // 物理
-    const friction = player.dashing ? 0.98 : 0.85;
+    // 物理 - 检查是否在冰面上
+    const terrainSystem = this.engine.system(TerrainSystem);
+    const onIce = terrainSystem?.isPlayerOnIce(player.playerId) ?? false;
+    const friction = player.dashing ? 0.98 : (onIce ? 0.98 : 0.85);  // 冰面上摩擦力更低
     velocity.x *= friction;
     velocity.y *= friction;
 

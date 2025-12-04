@@ -2,9 +2,9 @@
  * 游戏配置
  */
 
-// 设计分辨率
-export const DESIGN_WIDTH = 1600;
-export const DESIGN_HEIGHT = 900;
+// 设计分辨率（加大地图）
+export const DESIGN_WIDTH = 2000;
+export const DESIGN_HEIGHT = 1200;
 
 // 玩家配置
 export const PLAYER_CONFIG = {
@@ -175,7 +175,7 @@ export const GameSettings: {
   playerCount: number;
   players: PlayerConfig[];
 } = {
-  winScore: 5,
+  winScore: 11,  // 固定11回合胜利
   aiDifficulty: 1,
   soundEnabled: true,
   vibrationEnabled: true,
@@ -187,56 +187,56 @@ export const GameSettings: {
   players: []
 };
 
-// 地图布局
+// 地图布局（障碍物尺寸适配大地图）
 export const MAP_LAYOUTS = [
   // 中心十字
   [
-    { bx: 0.5, by: 0.5, bw: 300, bh: 40, ox: -150, oy: -20 },
-    { bx: 0.5, by: 0.5, bw: 40, bh: 240, ox: -20, oy: -120 }
+    { bx: 0.5, by: 0.5, bw: 380, bh: 50, ox: -190, oy: -25 },
+    { bx: 0.5, by: 0.5, bw: 50, bh: 300, ox: -25, oy: -150 }
   ],
   // 四角方块
   [
-    { bx: 0.16, by: 0.22, bw: 100, bh: 100, ox: 0, oy: 0 },
-    { bx: 0.84, by: 0.22, bw: 100, bh: 100, ox: -100, oy: 0 },
-    { bx: 0.16, by: 0.78, bw: 100, bh: 100, ox: 0, oy: -100 },
-    { bx: 0.84, by: 0.78, bw: 100, bh: 100, ox: -100, oy: -100 }
+    { bx: 0.16, by: 0.22, bw: 125, bh: 125, ox: 0, oy: 0 },
+    { bx: 0.84, by: 0.22, bw: 125, bh: 125, ox: -125, oy: 0 },
+    { bx: 0.16, by: 0.78, bw: 125, bh: 125, ox: 0, oy: -125 },
+    { bx: 0.84, by: 0.78, bw: 125, bh: 125, ox: -125, oy: -125 }
   ],
   // 三条横杠
   [
-    { bx: 0.15, by: 0.33, bw: 250, bh: 35, ox: 0, oy: 0 },
-    { bx: 0.5, by: 0.5, bw: 250, bh: 35, ox: -125, oy: 0 },
-    { bx: 0.85, by: 0.67, bw: 250, bh: 35, ox: -250, oy: 0 }
+    { bx: 0.15, by: 0.33, bw: 320, bh: 45, ox: 0, oy: 0 },
+    { bx: 0.5, by: 0.5, bw: 320, bh: 45, ox: -160, oy: 0 },
+    { bx: 0.85, by: 0.67, bw: 320, bh: 45, ox: -320, oy: 0 }
   ],
   // 回字形
   [
-    { bx: 0.5, by: 0.3, bw: 350, bh: 30, ox: -175, oy: 0 },
-    { bx: 0.5, by: 0.7, bw: 350, bh: 30, ox: -175, oy: 0 },
-    { bx: 0.3, by: 0.5, bw: 30, bh: 200, ox: 0, oy: -100 },
-    { bx: 0.7, by: 0.5, bw: 30, bh: 200, ox: 0, oy: -100 }
+    { bx: 0.5, by: 0.3, bw: 440, bh: 40, ox: -220, oy: 0 },
+    { bx: 0.5, by: 0.7, bw: 440, bh: 40, ox: -220, oy: 0 },
+    { bx: 0.3, by: 0.5, bw: 40, bh: 260, ox: 0, oy: -130 },
+    { bx: 0.7, by: 0.5, bw: 40, bh: 260, ox: 0, oy: -130 }
   ],
   // 斜对角
   [
-    { bx: 0.25, by: 0.3, bw: 180, bh: 35, ox: -90, oy: 0 },
-    { bx: 0.75, by: 0.7, bw: 180, bh: 35, ox: -90, oy: 0 },
-    { bx: 0.5, by: 0.5, bw: 80, bh: 80, ox: -40, oy: -40 }
+    { bx: 0.25, by: 0.3, bw: 230, bh: 45, ox: -115, oy: 0 },
+    { bx: 0.75, by: 0.7, bw: 230, bh: 45, ox: -115, oy: 0 },
+    { bx: 0.5, by: 0.5, bw: 100, bh: 100, ox: -50, oy: -50 }
   ],
   // 迷宫
   [
-    { bx: 0.35, by: 0.25, bw: 30, bh: 200, ox: 0, oy: 0 },
-    { bx: 0.65, by: 0.75, bw: 30, bh: 200, ox: 0, oy: -200 },
-    { bx: 0.5, by: 0.5, bw: 200, bh: 30, ox: -100, oy: -15 }
+    { bx: 0.35, by: 0.25, bw: 40, bh: 260, ox: 0, oy: 0 },
+    { bx: 0.65, by: 0.75, bw: 40, bh: 260, ox: 0, oy: -260 },
+    { bx: 0.5, by: 0.5, bw: 260, bh: 40, ox: -130, oy: -20 }
   ],
   // 两堵墙
   [
-    { bx: 0.33, by: 0.5, bw: 40, bh: 300, ox: -20, oy: -150 },
-    { bx: 0.67, by: 0.5, bw: 40, bh: 300, ox: -20, oy: -150 }
+    { bx: 0.33, by: 0.5, bw: 50, bh: 380, ox: -25, oy: -190 },
+    { bx: 0.67, by: 0.5, bw: 50, bh: 380, ox: -25, oy: -190 }
   ],
   // 蜂窝
   [
-    { bx: 0.5, by: 0.35, bw: 120, bh: 50, ox: -60, oy: -25 },
-    { bx: 0.5, by: 0.65, bw: 120, bh: 50, ox: -60, oy: -25 },
-    { bx: 0.3, by: 0.5, bw: 80, bh: 80, ox: -40, oy: -40 },
-    { bx: 0.7, by: 0.5, bw: 80, bh: 80, ox: -40, oy: -40 }
+    { bx: 0.5, by: 0.35, bw: 150, bh: 65, ox: -75, oy: -32 },
+    { bx: 0.5, by: 0.65, bw: 150, bh: 65, ox: -75, oy: -32 },
+    { bx: 0.3, by: 0.5, bw: 100, bh: 100, ox: -50, oy: -50 },
+    { bx: 0.7, by: 0.5, bw: 100, bh: 100, ox: -50, oy: -50 }
   ]
 ];
 

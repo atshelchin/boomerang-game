@@ -392,3 +392,146 @@ export function spawnParticles(
 
   return particles;
 }
+
+/**
+ * 创建冰面地形
+ */
+export function createIceTerrain(
+  x: number,
+  y: number,
+  width: number,
+  height: number
+): Partial<GameEntity> {
+  return {
+    transform: createTransform(x + width / 2, y + height / 2),
+    tags: { values: [EntityTags.TERRAIN] },
+    terrain: {
+      type: 'ice',
+      width,
+      height,
+      friction: 0.02  // 极低摩擦
+    }
+  };
+}
+
+/**
+ * 创建水面地形（致死）
+ */
+export function createWaterTerrain(
+  x: number,
+  y: number,
+  width: number,
+  height: number
+): Partial<GameEntity> {
+  return {
+    transform: createTransform(x + width / 2, y + height / 2),
+    tags: { values: [EntityTags.TERRAIN] },
+    terrain: {
+      type: 'water',
+      width,
+      height
+    }
+  };
+}
+
+/**
+ * 创建传送门
+ */
+export function createPortal(
+  x: number,
+  y: number,
+  id: number,
+  linkedPortalId: number,
+  color: string = '#a855f7'
+): Partial<GameEntity> {
+  return {
+    transform: createTransform(x, y),
+    tags: { values: [EntityTags.PORTAL] },
+    collider: createCollider('circle', { radius: 35 }),
+    portal: {
+      id,
+      linkedPortalId,
+      radius: 35,
+      color,
+      cooldown: 0,
+      rotation: 0
+    }
+  };
+}
+
+/**
+ * 创建滚石发射器
+ */
+export function createBoulderSpawner(
+  x: number,
+  y: number,
+  dirX: number,
+  dirY: number,
+  interval: number = 180
+): Partial<GameEntity> {
+  // 标准化方向
+  const len = Math.sqrt(dirX * dirX + dirY * dirY);
+  return {
+    transform: createTransform(x, y),
+    tags: { values: [EntityTags.BOULDER] },
+    boulder: {
+      direction: { x: dirX / len, y: dirY / len },
+      speed: 8,
+      radius: 40,
+      active: false,
+      spawnTimer: interval / 2,  // 初始延迟
+      spawnInterval: interval
+    }
+  };
+}
+
+/**
+ * 创建滚动的石头（由发射器生成）
+ */
+export function createRollingBoulder(
+  x: number,
+  y: number,
+  vx: number,
+  vy: number,
+  radius: number = 40
+): Partial<GameEntity> {
+  return {
+    transform: createTransform(x, y),
+    velocity: { x: vx, y: vy },
+    tags: { values: [EntityTags.BOULDER] },
+    collider: createCollider('circle', { radius }),
+    boulder: {
+      direction: { x: vx, y: vy },
+      speed: Math.sqrt(vx * vx + vy * vy),
+      radius,
+      active: true,
+      spawnTimer: 0,
+      spawnInterval: 0
+    }
+  };
+}
+
+/**
+ * 创建毒圈
+ */
+export function createPoisonZone(
+  centerX: number,
+  centerY: number,
+  initialRadius: number,
+  targetRadius: number = 100,
+  shrinkSpeed: number = 0.3
+): Partial<GameEntity> {
+  return {
+    transform: createTransform(centerX, centerY),
+    tags: { values: [EntityTags.POISON_ZONE] },
+    poisonZone: {
+      currentRadius: initialRadius,
+      targetRadius,
+      shrinkSpeed,
+      damage: 1,
+      damageInterval: 30,  // 每0.5秒
+      centerX,
+      centerY
+    }
+  };
+}

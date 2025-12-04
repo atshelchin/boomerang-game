@@ -7,12 +7,14 @@ import { Engine, InputSystem, CameraSystem, MatterPhysicsSystem } from 'you-engi
 import { PlayerSystem } from './systems/PlayerSystem';
 import { BoomerangSystem } from './systems/BoomerangSystem';
 import { CollisionSystem } from './systems/CollisionSystem';
+import { TerrainSystem } from './systems/TerrainSystem';
 import { GameRenderSystem } from './systems/GameRenderSystem';
 import { DynamicCameraSystem } from './systems/DynamicCameraSystem';
 import { GameScene } from './scenes/GameScene';
 import { MenuScene } from './scenes/MenuScene';
 import { CharacterSelectScene } from './scenes/CharacterSelectScene';
 import { TutorialScene } from './scenes/TutorialScene';
+import { DebugScene } from './scenes/DebugScene';
 import { DESIGN_WIDTH, DESIGN_HEIGHT, GameSettings } from './config/GameConfig';
 import { GameState } from './config/GameState';
 
@@ -63,6 +65,7 @@ engine
   .use(PlayerSystem)
   .use(BoomerangSystem)
   .use(CollisionSystem)
+  .use(TerrainSystem)
   .use(DynamicCameraSystem)
   .use(GameRenderSystem);
 
@@ -86,6 +89,7 @@ engine.addScene('menu', MenuScene);
 engine.addScene('select', CharacterSelectScene);
 engine.addScene('game', GameScene);
 engine.addScene('tutorial', TutorialScene);
+engine.addScene('debug', DebugScene);
 
 // 事件监听
 engine.on('player:throw', () => {
@@ -146,6 +150,12 @@ engine.on('player:burn', () => {
 engine.on('player:burnDamage', () => {
   playSound('burnTick');
   shakeScreen(3);
+});
+
+engine.on('portal:teleport', () => {
+  playSound('teleport');
+  shakeScreen(8);
+  flashScreen(0.5, 100);
 });
 
 // 音频系统
@@ -462,6 +472,66 @@ function playSound(type: string): void {
       const ng = ctx.createGain();
       noise.connect(ng); ng.connect(master);
       ng.gain.value = 0.2;
+      noise.start(now);
+    },
+    teleport: () => {
+      // 传送门音效 - 空间扭曲声
+      [200, 400, 800, 1600].forEach((f, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(master);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(f, now + i * 0.02);
+        osc.frequency.exponentialRampToValueAtTime(f * 2, now + i * 0.02 + 0.1);
+        gain.gain.setValueAtTime(0.2, now + i * 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.02 + 0.15);
+        osc.start(now + i * 0.02); osc.stop(now + i * 0.02 + 0.15);
+      });
+    },
+    water: () => {
+      // 落水音效 - 水花声
+      const noise = ctx.createBufferSource();
+      const buffer = ctx.createBuffer(1, ctx.sampleRate * 0.3, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < data.length; i++) {
+        data[i] = (Math.random() * 2 - 1) * 0.5 * Math.exp(-i / (ctx.sampleRate * 0.1));
+      }
+      noise.buffer = buffer;
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.value = 800;
+      const ng = ctx.createGain();
+      noise.connect(filter); filter.connect(ng); ng.connect(master);
+      ng.gain.value = 0.5;
+      noise.start(now);
+    },
+    boulder: () => {
+      // 滚石音效 - 轰隆声
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(master);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(80, now);
+      osc.frequency.exponentialRampToValueAtTime(40, now + 0.3);
+      gain.gain.setValueAtTime(0.6, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+      osc.start(now); osc.stop(now + 0.35);
+    },
+    poison: () => {
+      // 毒气音效 - 嘶嘶声
+      const noise = ctx.createBufferSource();
+      const buffer = ctx.createBuffer(1, ctx.sampleRate * 0.2, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < data.length; i++) {
+        data[i] = (Math.random() * 2 - 1) * 0.3;
+      }
+      noise.buffer = buffer;
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'highpass';
+      filter.frequency.value = 2000;
+      const ng = ctx.createGain();
+      noise.connect(filter); filter.connect(ng); ng.connect(master);
+      ng.gain.value = 0.3;
       noise.start(now);
     }
   };

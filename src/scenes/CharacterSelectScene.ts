@@ -10,14 +10,6 @@ import { GameState } from '../config/GameState';
 import { i18n } from '../config/i18n';
 import { CharacterRenderer } from '../utils/CharacterRenderer';
 
-/** 队伍颜色 */
-const TEAM_COLORS = [
-  { name: '红队', color: '#ff6b6b', bg: 'rgba(255,107,107,0.2)' },
-  { name: '蓝队', color: '#4ecdc4', bg: 'rgba(78,205,196,0.2)' },
-  { name: '黄队', color: '#ffd700', bg: 'rgba(255,215,0,0.2)' },
-  { name: '紫队', color: '#a855f7', bg: 'rgba(168,85,247,0.2)' },
-];
-
 /** 玩家类型 */
 type PlayerType = 'none' | 'human' | 'cpu';
 
@@ -391,7 +383,7 @@ export class CharacterSelectScene extends Scene {
         // 上下切换设置项（颜色/形状/队伍）
         if (dpadUp || dpadDown) {
           const delta = dpadDown ? 1 : -1;
-          slot.settingIndex = (slot.settingIndex + delta + 3) % 3;
+          slot.settingIndex = (slot.settingIndex + delta + 2) % 2;
           this.input.vibrate(gpIndex, { weak: 0.2, duration: 30 });
         }
 
@@ -405,10 +397,6 @@ export class CharacterSelectScene extends Scene {
               break;
             case 1: // 形状
               slot.shapeIndex = (slot.shapeIndex + delta + CHARACTER_SHAPES.length) % CHARACTER_SHAPES.length;
-              break;
-            case 2: // 队伍
-              // -1 = Solo, 0-3 = 队伍
-              slot.teamIndex = ((slot.teamIndex + 1) + delta + 5) % 5 - 1;
               break;
           }
           this.input.vibrate(gpIndex, { weak: 0.2, duration: 30 });
@@ -518,7 +506,7 @@ export class CharacterSelectScene extends Scene {
       // 上下切换设置项（颜色/形状/队伍）
       if (dpadUp || dpadDown) {
         const delta = dpadDown ? 1 : -1;
-        slot.settingIndex = (slot.settingIndex + delta + 3) % 3;
+        slot.settingIndex = (slot.settingIndex + delta + 2) % 2;
         this.input.vibrate(gpIndex, { weak: 0.2, duration: 30 });
       }
 
@@ -532,10 +520,6 @@ export class CharacterSelectScene extends Scene {
             break;
           case 1: // 形状（跳过已被占用的）
             this.cycleShapeWithConflictCheck(slot, delta);
-            break;
-          case 2: // 队伍
-            // -1 = Solo, 0-3 = 队伍
-            slot.teamIndex = ((slot.teamIndex + 1) + delta + 5) % 5 - 1;
             break;
         }
         this.input.vibrate(gpIndex, { weak: 0.2, duration: 30 });
@@ -642,10 +626,6 @@ export class CharacterSelectScene extends Scene {
       } else if (slot.settingIndex === 1) {
         // 切换形状（跳过已被占用的颜色+形状组合）
         this.cycleShapeWithConflictCheck(slot, delta);
-      } else {
-        // 切换队伍: -1(Solo), 0, 1, 2, 3
-        const maxTeam = TEAM_COLORS.length;
-        slot.teamIndex = ((slot.teamIndex + 1) + delta + (maxTeam + 1)) % (maxTeam + 1) - 1;
       }
 
       // 同步更新 skinIndex（兼容旧代码）
@@ -692,22 +672,9 @@ export class CharacterSelectScene extends Scene {
   }
 
 
-  private validateTeamSetup(joinedPlayers: PlayerSlot[]): boolean {
-    // 获取所有非 Solo 的队伍
-    const teams = new Map<number, number>();
-    let soloCount = 0;
-
-    for (const p of joinedPlayers) {
-      if (p.teamIndex === -1) {
-        soloCount++;
-      } else {
-        teams.set(p.teamIndex, (teams.get(p.teamIndex) || 0) + 1);
-      }
-    }
-
-    // 如果有队伍，至少要有 2 个不同的"阵营"（队伍或 Solo）
-    const totalFactions = teams.size + soloCount;
-    return totalFactions >= 2 || joinedPlayers.length === 0;
+  private validateTeamSetup(_joinedPlayers: PlayerSlot[]): boolean {
+    // 团队模式已移除，始终返回 true
+    return true;
   }
 
   private startGame(): void {
@@ -962,10 +929,9 @@ export class CharacterSelectScene extends Scene {
       // 已加入 - 彩色边框
       const slotColor = CHARACTER_COLORS[slot.colorIndex];
       const borderColor = slot.ready ? '#4ecdc4' : slotColor.color1;
-      const teamColor = slot.teamIndex >= 0 ? TEAM_COLORS[slot.teamIndex] : null;
 
-      // 背景 (队伍色调)
-      ctx.fillStyle = teamColor ? teamColor.bg : 'rgba(0,0,0,0.5)';
+      // 背景
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
       ctx.fillRect(x, y, w, h);
 
       // 边框
@@ -1058,40 +1024,6 @@ export class CharacterSelectScene extends Scene {
         ctx.fillText('▶', x + w - 30, shapeRowY + 5);
       }
 
-      // ===== 队伍选择行 =====
-      const teamRowY = y + 380;
-      const isTeamSelected = slot.settingIndex === 2 && canEditSettings;
-
-      // 高亮背景
-      if (isTeamSelected) {
-        ctx.fillStyle = isCPUBeingManaged ? 'rgba(255, 149, 0, 0.3)' : 'rgba(78, 205, 196, 0.2)';
-        ctx.fillRect(x + 10, teamRowY - 18, w - 20, 40);
-      }
-
-      // 队伍标签
-      ctx.font = '12px "Segoe UI", system-ui, sans-serif';
-      ctx.fillStyle = '#666';
-      ctx.fillText('队伍', x + w / 2, teamRowY - 22);
-
-      // 队伍名称
-      ctx.font = 'bold 20px "Segoe UI", system-ui, sans-serif';
-      if (slot.teamIndex === -1) {
-        ctx.fillStyle = '#aaa';
-        ctx.fillText('Solo', x + w / 2, teamRowY + 5);
-      } else {
-        const team = TEAM_COLORS[slot.teamIndex];
-        ctx.fillStyle = team.color;
-        ctx.fillText(team.name, x + w / 2, teamRowY + 5);
-      }
-
-      // 左右箭头
-      if (canEditSettings) {
-        ctx.fillStyle = isTeamSelected ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.3)';
-        ctx.font = '24px sans-serif';
-        ctx.fillText('◀', x + 30, teamRowY + 5);
-        ctx.fillText('▶', x + w - 30, teamRowY + 5);
-      }
-
       // 玩家名字 (CPU 显示不同颜色)
       ctx.font = '16px "Segoe UI", system-ui, sans-serif';
       ctx.fillStyle = slot.type === 'cpu' ? '#ff9500' : '#fff';
@@ -1159,18 +1091,6 @@ export class CharacterSelectScene extends Scene {
 
     ctx.save();
     ctx.translate(x, y + bob);
-
-    // 队伍光环
-    if (slot.teamIndex >= 0) {
-      const teamColor = TEAM_COLORS[slot.teamIndex].color;
-      ctx.strokeStyle = teamColor;
-      ctx.lineWidth = 3;
-      ctx.globalAlpha = 0.5 + this.hintFlash * 0.3;
-      ctx.beginPath();
-      ctx.arc(0, 0, radius + 15, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.globalAlpha = 1;
-    }
 
     // 阴影
     ctx.fillStyle = 'rgba(0,0,0,0.3)';
