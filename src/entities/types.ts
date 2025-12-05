@@ -27,15 +27,15 @@ export interface PlayerData {
   angle: number;
   // 多人支持
   skinIndex: number;
-  colorIndex?: number;   // 颜色索引
-  shapeIndex?: number;   // 形状索引
-  teamIndex?: number;    // 队伍索引 (-1 = Solo)
-  gamepadIndex: number;  // -1 表示未分配, -2 表示 CPU
+  colorIndex?: number; // 颜色索引
+  shapeIndex?: number; // 形状索引
+  teamIndex?: number; // 队伍索引 (-1 = Solo)
+  gamepadIndex: number; // -1 表示未分配, -2 表示 CPU
   // 状态效果
-  frozen: boolean;       // 是否被冰冻
-  frozenTimer: number;   // 冰冻剩余时间
-  burning: boolean;      // 是否在燃烧
-  burnTimer: number;     // 燃烧剩余时间
+  frozen: boolean; // 是否被冰冻
+  frozenTimer: number; // 冰冻剩余时间
+  burning: boolean; // 是否在燃烧
+  burnTimer: number; // 燃烧剩余时间
 }
 
 // 回旋镖特有组件
@@ -51,8 +51,8 @@ export interface BoomerangData {
   rotation: number;
   trailTimer: number;
   // 新道具效果
-  hasFreeze: boolean;    // 冰冻效果
-  hasFire: boolean;      // 火焰效果（留下火焰轨迹）
+  hasFreeze: boolean; // 冰冻效果
+  hasFire: boolean; // 火焰效果（留下火焰轨迹）
   canPenetrate: boolean; // 穿透墙壁
   extendedRange: boolean; // 延长射程
 }
@@ -111,15 +111,15 @@ export interface FloatingTextData {
 export interface FireTrailData {
   life: number;
   maxLife: number;
-  ownerId: number;  // 谁放的火
-  damage: boolean;  // 是否可以造成伤害
+  ownerId: number; // 谁放的火
+  damage: boolean; // 是否可以造成伤害
 }
 
 // 冰冻轨迹组件
 export interface IceTrailData {
   life: number;
   maxLife: number;
-  ownerId: number;  // 谁放的冰
+  ownerId: number; // 谁放的冰
 }
 
 // 地形区域组件
@@ -137,12 +137,12 @@ export interface TerrainData {
 
 // 传送门组件
 export interface PortalData {
-  id: number;           // 传送门ID
-  linkedPortalId: number;  // 链接的另一个传送门ID
+  id: number; // 传送门ID
+  linkedPortalId: number; // 链接的另一个传送门ID
   radius: number;
   color: string;
-  cooldown: number;     // 传送冷却
-  rotation: number;     // 旋转动画
+  cooldown: number; // 传送冷却
+  rotation: number; // 旋转动画
 }
 
 // 滚石陷阱组件
@@ -200,5 +200,5 @@ export const EntityTags = {
   TERRAIN: 'terrain',
   PORTAL: 'portal',
   BOULDER: 'boulder',
-  POISON_ZONE: 'poisonZone'
+  POISON_ZONE: 'poisonZone',
 } as const;

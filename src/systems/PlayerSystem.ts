@@ -3,13 +3,23 @@
  * 处理玩家移动、冲刺、投掷等逻辑
  */
 
-import { System, InputSystem } from 'you-engine';
+import { InputSystem, System } from 'you-engine';
+import {
+  BOOMERANG_CONFIG,
+  GameSettings,
+  PLAYER_CONFIG,
+  PLAYER_SKINS,
+  POWERUP_CONFIG,
+} from '../config/GameConfig';
+import { GameState, Stats } from '../config/GameState';
+import {
+  createBoomerang,
+  createParticle,
+  createTrail,
+  spawnParticles,
+} from '../entities/factories';
 import type { GameEntity, PlayerData } from '../entities/types';
 import { EntityTags } from '../entities/types';
-import { createBoomerang, createTrail, spawnParticles } from '../entities/factories';
-import { PLAYER_CONFIG, BOOMERANG_CONFIG, PLAYER_SKINS, GameSettings, POWERUP_CONFIG } from '../config/GameConfig';
-import { GameState, Stats } from '../config/GameState';
-import { createParticle } from '../entities/factories';
 import { TerrainSystem } from './TerrainSystem';
 
 export class PlayerSystem extends System {
@@ -32,7 +42,7 @@ export class PlayerSystem extends System {
 
     const players = this.engine.world.entities.filter(
       (e): e is GameEntity & { player: PlayerData } =>
-        !!(e.tags?.values.includes(EntityTags.PLAYER)) && e.player !== undefined
+        !!e.tags?.values.includes(EntityTags.PLAYER) && e.player !== undefined
     );
 
     for (const player of players) {
@@ -105,16 +115,14 @@ export class PlayerSystem extends System {
           this.engine.emit('player:burnDamage', {
             playerId: player.playerId,
             x: transform.x,
-            y: transform.y
+            y: transform.y,
           });
         }
       }
     }
 
     // 获取输入
-    const inp = player.isAI
-      ? this.getAIInput(entity)
-      : this.getPlayerInput(player.playerId);
+    const inp = player.isAI ? this.getAIInput(entity) : this.getPlayerInput(player.playerId);
 
     // 冲刺
     if (inp.dash && player.dashCooldown <= 0 && !player.dashing && !player.charging) {
@@ -162,7 +170,11 @@ export class PlayerSystem extends System {
         // 蓄力时震动反馈
         if (player.chargeTime % 8 === 0 && !player.isAI) {
           const intensity = Math.min(player.chargeTime / PLAYER_CONFIG.maxCharge, 1);
-          this.input.vibrate(player.playerId, { strong: intensity * 0.3, weak: intensity * 0.5, duration: 30 });
+          this.input.vibrate(player.playerId, {
+            strong: intensity * 0.3,
+            weak: intensity * 0.5,
+            duration: 30,
+          });
         }
 
         // 蓄力时瞄准 - 蓄力越满，转向越慢（更精确）
@@ -194,7 +206,7 @@ export class PlayerSystem extends System {
     // 物理 - 检查是否在冰面上
     const terrainSystem = this.engine.system(TerrainSystem);
     const onIce = terrainSystem?.isPlayerOnIce(player.playerId) ?? false;
-    const friction = player.dashing ? 0.98 : (onIce ? 0.98 : 0.85);  // 冰面上摩擦力更低
+    const friction = player.dashing ? 0.98 : onIce ? 0.98 : 0.85; // 冰面上摩擦力更低
     velocity.x *= friction;
     velocity.y *= friction;
 
@@ -226,11 +238,15 @@ export class PlayerSystem extends System {
     const maxBounce = 0.8; // 最大反弹系数
 
     let hitBoundary = false;
-    let hitX = 0, hitY = 0;
+    let hitX = 0,
+      hitY = 0;
 
     if (transform.x < margin) {
       transform.x = margin;
-      const bounceForce = Math.min(bounceBase + Math.abs(velocity.x) * bounceScale / PLAYER_CONFIG.maxSpeed, maxBounce);
+      const bounceForce = Math.min(
+        bounceBase + (Math.abs(velocity.x) * bounceScale) / PLAYER_CONFIG.maxSpeed,
+        maxBounce
+      );
       velocity.x = Math.abs(velocity.x) * bounceForce;
       hitBoundary = true;
       hitX = margin;
@@ -238,7 +254,10 @@ export class PlayerSystem extends System {
     }
     if (transform.x > W - margin) {
       transform.x = W - margin;
-      const bounceForce = Math.min(bounceBase + Math.abs(velocity.x) * bounceScale / PLAYER_CONFIG.maxSpeed, maxBounce);
+      const bounceForce = Math.min(
+        bounceBase + (Math.abs(velocity.x) * bounceScale) / PLAYER_CONFIG.maxSpeed,
+        maxBounce
+      );
       velocity.x = -Math.abs(velocity.x) * bounceForce;
       hitBoundary = true;
       hitX = W - margin;
@@ -246,7 +265,10 @@ export class PlayerSystem extends System {
     }
     if (transform.y < margin) {
       transform.y = margin;
-      const bounceForce = Math.min(bounceBase + Math.abs(velocity.y) * bounceScale / PLAYER_CONFIG.maxSpeed, maxBounce);
+      const bounceForce = Math.min(
+        bounceBase + (Math.abs(velocity.y) * bounceScale) / PLAYER_CONFIG.maxSpeed,
+        maxBounce
+      );
       velocity.y = Math.abs(velocity.y) * bounceForce;
       hitBoundary = true;
       hitX = transform.x;
@@ -254,7 +276,10 @@ export class PlayerSystem extends System {
     }
     if (transform.y > H - margin) {
       transform.y = H - margin;
-      const bounceForce = Math.min(bounceBase + Math.abs(velocity.y) * bounceScale / PLAYER_CONFIG.maxSpeed, maxBounce);
+      const bounceForce = Math.min(
+        bounceBase + (Math.abs(velocity.y) * bounceScale) / PLAYER_CONFIG.maxSpeed,
+        maxBounce
+      );
       velocity.y = -Math.abs(velocity.y) * bounceForce;
       hitBoundary = true;
       hitX = transform.x;
@@ -275,7 +300,7 @@ export class PlayerSystem extends System {
         colors: [skin.color1, '#fff', '#aaa'],
         sizeMin: 2,
         sizeMax: 4 + intensity * 4,
-        count: Math.floor(5 + intensity * 10)
+        count: Math.floor(5 + intensity * 10),
       });
 
       // 震动反馈
@@ -283,11 +308,16 @@ export class PlayerSystem extends System {
         this.input.vibrate(player.playerId, {
           strong: intensity * 0.5,
           weak: intensity * 0.7,
-          duration: 30 + intensity * 50
+          duration: 30 + intensity * 50,
         });
       }
 
-      this.engine.emit('player:wallHit', { playerId: player.playerId, x: hitX, y: hitY, intensity });
+      this.engine.emit('player:wallHit', {
+        playerId: player.playerId,
+        x: hitX,
+        y: hitY,
+        intensity,
+      });
     }
 
     // 障碍物碰撞 (handled by collision system)
@@ -299,18 +329,21 @@ export class PlayerSystem extends System {
       y: playerId === 0 ? this.input.axisY() : this.input.axisY(1),
       actionHeld: this.input.isHeld('action', playerId),
       actionReleased: this.input.isReleased('action', playerId),
-      dash: this.input.isPressed('dash', playerId)
+      dash: this.input.isPressed('dash', playerId),
     };
   }
 
   /** AI 状态存储 */
-  private aiStates: Map<number, {
-    targetX: number;
-    targetY: number;
-    attackTimer: number;
-    chargeStarted: boolean;
-    dodgeTimer: number;
-  }> = new Map();
+  private aiStates: Map<
+    number,
+    {
+      targetX: number;
+      targetY: number;
+      attackTimer: number;
+      chargeStarted: boolean;
+      dodgeTimer: number;
+    }
+  > = new Map();
 
   private getAIInput(entity: GameEntity): {
     x: number;
@@ -344,7 +377,7 @@ export class PlayerSystem extends System {
     // 寻找最近的敌人
     const enemies = (this.engine.world.entities as GameEntity[]).filter(
       (e): e is GameEntity & { player: PlayerData } =>
-        !!(e.tags?.values.includes(EntityTags.PLAYER)) &&
+        !!e.tags?.values.includes(EntityTags.PLAYER) &&
         e.player !== undefined &&
         e.player.playerId !== player.playerId &&
         e.player.alive
@@ -352,9 +385,10 @@ export class PlayerSystem extends System {
 
     // 寻找飞来的回旋镖（危险检测）
     const boomerangs = (this.engine.world.entities as GameEntity[]).filter(
-      e => e.tags?.values.includes(EntityTags.BOOMERANG) &&
-           e.boomerang !== undefined &&
-           e.boomerang.ownerId !== player.playerId
+      (e) =>
+        e.tags?.values.includes(EntityTags.BOOMERANG) &&
+        e.boomerang !== undefined &&
+        e.boomerang.ownerId !== player.playerId
     );
 
     let moveX = 0;
@@ -423,16 +457,16 @@ export class PlayerSystem extends System {
 
         if (dist > idealDist + 50) {
           // 太远，靠近
-          moveX = dx / dist * reactionSpeed * 10;
-          moveY = dy / dist * reactionSpeed * 10;
+          moveX = (dx / dist) * reactionSpeed * 10;
+          moveY = (dy / dist) * reactionSpeed * 10;
         } else if (dist < idealDist - 50) {
           // 太近，后退
-          moveX = -dx / dist * reactionSpeed * 8;
-          moveY = -dy / dist * reactionSpeed * 8;
+          moveX = (-dx / dist) * reactionSpeed * 8;
+          moveY = (-dy / dist) * reactionSpeed * 8;
         } else {
           // 适当距离，环绕移动
-          moveX = -dy / dist * reactionSpeed * 5;
-          moveY = dx / dist * reactionSpeed * 5;
+          moveX = (-dy / dist) * reactionSpeed * 5;
+          moveY = (dx / dist) * reactionSpeed * 5;
         }
 
         // 攻击逻辑
@@ -448,7 +482,7 @@ export class PlayerSystem extends System {
               // 蓄力完成，释放
               actionReleased = true;
               aiState.chargeStarted = false;
-              aiState.attackTimer = 60 + Math.random() * 120 / difficultyMultiplier;
+              aiState.attackTimer = 60 + (Math.random() * 120) / difficultyMultiplier;
             } else {
               actionHeld = true;
               // 蓄力时瞄准敌人
@@ -483,10 +517,13 @@ export class PlayerSystem extends System {
   }
 
   private hasPowerup(player: PlayerData, type: string): boolean {
-    return player.powerups.some(p => p.type === type);
+    return player.powerups.some((p) => p.type === type);
   }
 
-  private startDash(entity: GameEntity & { player: PlayerData }, inp: { x: number; y: number }): void {
+  private startDash(
+    entity: GameEntity & { player: PlayerData },
+    inp: { x: number; y: number }
+  ): void {
     const { player, transform, velocity } = entity;
     if (!transform || !velocity) return;
 
@@ -495,7 +532,8 @@ export class PlayerSystem extends System {
     player.dashCooldown = PLAYER_CONFIG.dashCooldown;
     Stats.recordDash(player.playerId);
 
-    let dx = inp.x, dy = inp.y;
+    let dx = inp.x,
+      dy = inp.y;
     if (dx === 0 && dy === 0) {
       dx = Math.cos(player.angle);
       dy = Math.sin(player.angle);
@@ -521,7 +559,7 @@ export class PlayerSystem extends System {
       colors: [skin.color1, '#fff'],
       sizeMin: 4,
       sizeMax: 10,
-      count: 12
+      count: 12,
     });
 
     this.engine.emit('player:dash', { playerId: player.playerId, x: transform.x, y: transform.y });
@@ -560,7 +598,7 @@ export class PlayerSystem extends System {
     };
 
     if (isTriple) {
-      [-0.3, 0, 0.3].forEach(offset => {
+      [-0.3, 0, 0.3].forEach((offset) => {
         const angle = player.angle + offset;
         const boomerang = createBoomerang(
           player.playerId,
@@ -568,7 +606,7 @@ export class PlayerSystem extends System {
           transform.y + Math.sin(angle) * throwDist,
           Math.cos(angle) * speed,
           Math.sin(angle) * speed,
-          isBig  // 三连发也可以变大
+          isBig // 三连发也可以变大
         );
         applyPowerupEffects(boomerang);
         this.engine.spawn(boomerang);
@@ -591,7 +629,7 @@ export class PlayerSystem extends System {
       this.input.vibrate(player.playerId, {
         strong: 0.6 + chargeRatio * 0.4,
         weak: 0.8,
-        duration: 80
+        duration: 80,
       });
     }
 
@@ -599,7 +637,7 @@ export class PlayerSystem extends System {
       playerId: player.playerId,
       x: transform.x,
       y: transform.y,
-      chargeRatio
+      chargeRatio,
     });
   }
 
@@ -608,16 +646,20 @@ export class PlayerSystem extends System {
     this.engine.spawn(trail);
   }
 
-  private spawnParticleEffect(x: number, y: number, config: {
-    angle?: number;
-    spread?: number;
-    speedMin: number;
-    speedMax: number;
-    colors: string[];
-    sizeMin: number;
-    sizeMax: number;
-    count: number;
-  }): void {
+  private spawnParticleEffect(
+    x: number,
+    y: number,
+    config: {
+      angle?: number;
+      spread?: number;
+      speedMin: number;
+      speedMax: number;
+      colors: string[];
+      sizeMin: number;
+      sizeMax: number;
+      count: number;
+    }
+  ): void {
     const particles = spawnParticles(x, y, config.count, {
       angle: config.angle,
       spread: config.spread,
@@ -625,7 +667,7 @@ export class PlayerSystem extends System {
       speedMax: config.speedMax,
       colors: config.colors,
       sizeMin: config.sizeMin,
-      sizeMax: config.sizeMax
+      sizeMax: config.sizeMax,
     });
 
     for (const p of particles) {

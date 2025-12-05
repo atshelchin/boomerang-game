@@ -4,11 +4,22 @@
  */
 
 import { System } from 'you-engine';
-import type { GameEntity, BoomerangData, PlayerData, FireTrailData, IceTrailData } from '../entities/types';
-import { EntityTags } from '../entities/types';
-import { createTrail, spawnParticles, createFireTrail, createIceTrail } from '../entities/factories';
-import { BOOMERANG_CONFIG, PLAYER_SKINS, GameSettings } from '../config/GameConfig';
+import { BOOMERANG_CONFIG, GameSettings, PLAYER_SKINS } from '../config/GameConfig';
 import { GameState } from '../config/GameState';
+import {
+  createFireTrail,
+  createIceTrail,
+  createTrail,
+  spawnParticles,
+} from '../entities/factories';
+import type {
+  BoomerangData,
+  FireTrailData,
+  GameEntity,
+  IceTrailData,
+  PlayerData,
+} from '../entities/types';
+import { EntityTags } from '../entities/types';
 
 export class BoomerangSystem extends System {
   static priority = 20;
@@ -19,27 +30,28 @@ export class BoomerangSystem extends System {
   }
 
   onUpdate(_dt: number): void {
-    if (GameState.state !== 'fight' && GameState.state !== 'tutorial' && GameState.state !== 'ko') return;
+    if (GameState.state !== 'fight' && GameState.state !== 'tutorial' && GameState.state !== 'ko')
+      return;
     if (GameState.hitstop > 0) return;
 
     const boomerangs = this.engine.world.entities.filter(
       (e): e is GameEntity & { boomerang: BoomerangData } =>
-        !!(e.tags?.values.includes(EntityTags.BOOMERANG)) && e.boomerang !== undefined
+        !!e.tags?.values.includes(EntityTags.BOOMERANG) && e.boomerang !== undefined
     );
 
     const players = this.engine.world.entities.filter(
       (e): e is GameEntity & { player: PlayerData } =>
-        !!(e.tags?.values.includes(EntityTags.PLAYER)) && e.player !== undefined
+        !!e.tags?.values.includes(EntityTags.PLAYER) && e.player !== undefined
     );
 
     const fireTrails = this.engine.world.entities.filter(
       (e): e is GameEntity & { fireTrail: FireTrailData } =>
-        !!(e.tags?.values.includes(EntityTags.FIRE_TRAIL)) && e.fireTrail !== undefined
+        !!e.tags?.values.includes(EntityTags.FIRE_TRAIL) && e.fireTrail !== undefined
     );
 
     const iceTrails = this.engine.world.entities.filter(
       (e): e is GameEntity & { iceTrail: IceTrailData } =>
-        !!(e.tags?.values.includes(EntityTags.ICE_TRAIL)) && e.iceTrail !== undefined
+        !!e.tags?.values.includes(EntityTags.ICE_TRAIL) && e.iceTrail !== undefined
     );
 
     for (const boomerang of boomerangs) {
@@ -78,15 +90,17 @@ export class BoomerangSystem extends System {
       const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
 
       // 速度太慢或时间到了就返回（延长射程时返回时间更长）
-      const maxReturnTime = boomerang.extendedRange ? boomerang.maxReturnTime * 1.8 : boomerang.maxReturnTime;
+      const maxReturnTime = boomerang.extendedRange
+        ? boomerang.maxReturnTime * 1.8
+        : boomerang.maxReturnTime;
       const minSpeed = boomerang.extendedRange ? 5 : 8;
       if (speed < minSpeed || boomerang.returnTimer > maxReturnTime) {
         boomerang.returning = true;
       }
     } else {
       // 返回时追踪主人
-      const owner = players.find(p => p.player.playerId === boomerang.ownerId);
-      if (owner && owner.player.alive && owner.transform) {
+      const owner = players.find((p) => p.player.playerId === boomerang.ownerId);
+      if (owner?.player.alive && owner.transform) {
         const dx = owner.transform.x - transform.x;
         const dy = owner.transform.y - transform.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
@@ -107,7 +121,8 @@ export class BoomerangSystem extends System {
 
     // 留轨迹
     if (boomerang.trailTimer % 2 === 0) {
-      const skin = PLAYER_SKINS[boomerang.ownerId === 0 ? GameSettings.p1Skin : GameSettings.p2Skin];
+      const skin =
+        PLAYER_SKINS[boomerang.ownerId === 0 ? GameSettings.p1Skin : GameSettings.p2Skin];
       const radius = boomerang.isBig ? BOOMERANG_CONFIG.bigRadius : BOOMERANG_CONFIG.radius;
 
       // 火焰道具：留下火焰轨迹
@@ -136,10 +151,26 @@ export class BoomerangSystem extends System {
     const W = this.engine.width;
     const H = this.engine.height;
 
-    if (transform.x < margin) { transform.x = margin; velocity.x = Math.abs(velocity.x); this.bounce(entity); }
-    if (transform.x > W - margin) { transform.x = W - margin; velocity.x = -Math.abs(velocity.x); this.bounce(entity); }
-    if (transform.y < margin) { transform.y = margin; velocity.y = Math.abs(velocity.y); this.bounce(entity); }
-    if (transform.y > H - margin) { transform.y = H - margin; velocity.y = -Math.abs(velocity.y); this.bounce(entity); }
+    if (transform.x < margin) {
+      transform.x = margin;
+      velocity.x = Math.abs(velocity.x);
+      this.bounce(entity);
+    }
+    if (transform.x > W - margin) {
+      transform.x = W - margin;
+      velocity.x = -Math.abs(velocity.x);
+      this.bounce(entity);
+    }
+    if (transform.y < margin) {
+      transform.y = margin;
+      velocity.y = Math.abs(velocity.y);
+      this.bounce(entity);
+    }
+    if (transform.y > H - margin) {
+      transform.y = H - margin;
+      velocity.y = -Math.abs(velocity.y);
+      this.bounce(entity);
+    }
 
     // 障碍物碰撞 (handled by collision system)
   }
@@ -158,7 +189,7 @@ export class BoomerangSystem extends System {
       colors: ['#fff', '#aaa'],
       sizeMin: 2,
       sizeMax: 4,
-      count: 5
+      count: 5,
     });
 
     // 反弹太多次就强制返回
@@ -169,9 +200,7 @@ export class BoomerangSystem extends System {
     this.engine.emit('boomerang:bounce', { x: transform.x, y: transform.y });
   }
 
-  private updateFireTrails(
-    fireTrails: Array<GameEntity & { fireTrail: FireTrailData }>
-  ): void {
+  private updateFireTrails(fireTrails: Array<GameEntity & { fireTrail: FireTrailData }>): void {
     for (const trail of fireTrails) {
       trail.fireTrail.life--;
 
@@ -198,9 +227,7 @@ export class BoomerangSystem extends System {
     }
   }
 
-  private updateIceTrails(
-    iceTrails: Array<GameEntity & { iceTrail: IceTrailData }>
-  ): void {
+  private updateIceTrails(iceTrails: Array<GameEntity & { iceTrail: IceTrailData }>): void {
     for (const trail of iceTrails) {
       trail.iceTrail.life--;
 
@@ -234,8 +261,8 @@ export class BoomerangSystem extends System {
     for (const entity of boomerangs) {
       if (entity.boomerang.lifetime > BOOMERANG_CONFIG.maxLifetime) {
         // 超时返还给主人
-        const owner = players.find(p => p.player.playerId === entity.boomerang.ownerId);
-        if (owner && owner.player.alive && !owner.player.hasBoomerang) {
+        const owner = players.find((p) => p.player.playerId === entity.boomerang.ownerId);
+        if (owner?.player.alive && !owner.player.hasBoomerang) {
           owner.player.hasBoomerang = true;
         }
         this.engine.despawn(entity);
@@ -248,16 +275,20 @@ export class BoomerangSystem extends System {
     this.engine.spawn(trail);
   }
 
-  private spawnParticleEffect(x: number, y: number, config: {
-    angle?: number;
-    spread?: number;
-    speedMin: number;
-    speedMax: number;
-    colors: string[];
-    sizeMin: number;
-    sizeMax: number;
-    count: number;
-  }): void {
+  private spawnParticleEffect(
+    x: number,
+    y: number,
+    config: {
+      angle?: number;
+      spread?: number;
+      speedMin: number;
+      speedMax: number;
+      colors: string[];
+      sizeMin: number;
+      sizeMax: number;
+      count: number;
+    }
+  ): void {
     const particles = spawnParticles(x, y, config.count, {
       angle: config.angle,
       spread: config.spread,
@@ -265,7 +296,7 @@ export class BoomerangSystem extends System {
       speedMax: config.speedMax,
       colors: config.colors,
       sizeMin: config.sizeMin,
-      sizeMax: config.sizeMax
+      sizeMax: config.sizeMax,
     });
 
     for (const p of particles) {

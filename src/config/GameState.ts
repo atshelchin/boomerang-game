@@ -2,7 +2,16 @@
  * 游戏状态管理
  */
 
-export type GameStateType = 'title' | 'select' | 'ready' | 'fight' | 'ko' | 'roundEnd' | 'win' | 'pause' | 'tutorial';
+export type GameStateType =
+  | 'title'
+  | 'select'
+  | 'ready'
+  | 'fight'
+  | 'ko'
+  | 'roundEnd'
+  | 'win'
+  | 'pause'
+  | 'tutorial';
 
 /** 玩家得分数据 */
 export interface PlayerScore {
@@ -67,22 +76,22 @@ export const GameState = {
   scores: [0, 0] as [number, number],
 
   // 回合信息
-  roundWinner: -1,        // 回合胜者 ID (-1 表示未决定)
-  roundWinnerTeam: -1,    // 回合胜者队伍 (-1 表示 Solo 或未决定)
-  roundNumber: 1,         // 当前回合数
-  alivePlayers: [] as number[],  // 存活玩家 ID 列表
+  roundWinner: -1, // 回合胜者 ID (-1 表示未决定)
+  roundWinnerTeam: -1, // 回合胜者队伍 (-1 表示 Solo 或未决定)
+  roundNumber: 1, // 当前回合数
+  alivePlayers: [] as number[], // 存活玩家 ID 列表
 
   // 回合结束动画
-  roundEndAnimTime: 0,    // 回合结束动画计时器
-  previousScores: [] as number[],  // 动画开始前的分数（用于点亮新圆圈）
+  roundEndAnimTime: 0, // 回合结束动画计时器
+  previousScores: [] as number[], // 动画开始前的分数（用于点亮新圆圈）
 
   // 回放系统
-  replayBuffer: [] as ReplayFrame[],  // 回放缓冲区（存储最后几秒）
-  replayMaxFrames: 480,   // 最多保存480帧（约8秒，60fps）
+  replayBuffer: [] as ReplayFrame[], // 回放缓冲区（存储最后几秒）
+  replayMaxFrames: 480, // 最多保存480帧（约8秒，60fps）
   replayPlaybackIndex: 0, // 当前回放位置
-  replayPlaying: false,   // 是否正在回放
-  replaySpeed: 1.2,       // 回放速度（1.2倍速）
-  replayFrameAccum: 0,    // 帧累积器（用于慢放）
+  replayPlaying: false, // 是否正在回放
+  replaySpeed: 1.2, // 回放速度（1.2倍速）
+  replayFrameAccum: 0, // 帧累积器（用于慢放）
   winnerConfirmed: false, // 赢家是否已确认
 
   stateTimer: 0,
@@ -112,17 +121,17 @@ export const GameState = {
         score: 0,
         kills: 0,
         deaths: 0,
-        isAlive: true
+        isAlive: true,
       });
     }
-    this.alivePlayers = this.playerScores.map(p => p.playerId);
+    this.alivePlayers = this.playerScores.map((p) => p.playerId);
     this.roundNumber = 1;
   },
 
   // 玩家死亡
   playerDied(playerId: number, killerId: number) {
-    const victim = this.playerScores.find(p => p.playerId === playerId);
-    const killer = this.playerScores.find(p => p.playerId === killerId);
+    const victim = this.playerScores.find((p) => p.playerId === playerId);
+    const killer = this.playerScores.find((p) => p.playerId === killerId);
 
     if (victim) {
       victim.isAlive = false;
@@ -133,16 +142,16 @@ export const GameState = {
     }
 
     // 更新存活列表
-    this.alivePlayers = this.playerScores.filter(p => p.isAlive).map(p => p.playerId);
+    this.alivePlayers = this.playerScores.filter((p) => p.isAlive).map((p) => p.playerId);
   },
 
   // 回合结束，给获胜者加分
   endRound(winnerId: number) {
     // 保存动画开始前的分数
-    this.previousScores = this.playerScores.map(p => p.score);
-    this.roundEndAnimTime = 0;  // 重置动画计时器
+    this.previousScores = this.playerScores.map((p) => p.score);
+    this.roundEndAnimTime = 0; // 重置动画计时器
 
-    const winner = this.playerScores.find(p => p.playerId === winnerId);
+    const winner = this.playerScores.find((p) => p.playerId === winnerId);
     if (winner) {
       winner.score++;
     }
@@ -167,7 +176,7 @@ export const GameState = {
     for (const p of this.playerScores) {
       p.isAlive = true;
     }
-    this.alivePlayers = this.playerScores.map(p => p.playerId);
+    this.alivePlayers = this.playerScores.map((p) => p.playerId);
     this.roundNumber++;
 
     // 重置回放系统
@@ -255,14 +264,14 @@ export const GameState = {
     const teamScores = new Map<number, number>();
     // 需要从 GameSettings 获取玩家队伍信息
     return teamScores;
-  }
+  },
 };
 
 // 统计系统
 export const Stats = {
   current: {
     p1: { kills: 0, deaths: 0, throws: 0, dashes: 0, powerups: 0 },
-    p2: { kills: 0, deaths: 0, throws: 0, dashes: 0, powerups: 0 }
+    p2: { kills: 0, deaths: 0, throws: 0, dashes: 0, powerups: 0 },
   },
   total: {
     gamesPlayed: 0,
@@ -273,7 +282,7 @@ export const Stats = {
     totalDashes: 0,
     totalPowerups: 0,
     longestWinStreak: 0,
-    currentStreak: { player: -1, count: 0 }
+    currentStreak: { player: -1, count: 0 },
   },
 
   reset() {
@@ -328,7 +337,7 @@ export const Stats = {
   save() {
     try {
       localStorage.setItem('boomerangStats', JSON.stringify(this.total));
-    } catch (e) {
+    } catch (_e) {
       // ignore
     }
   },
@@ -337,10 +346,10 @@ export const Stats = {
     try {
       const saved = localStorage.getItem('boomerangStats');
       if (saved) this.total = { ...this.total, ...JSON.parse(saved) };
-    } catch (e) {
+    } catch (_e) {
       // ignore
     }
-  }
+  },
 };
 
 // 初始化加载统计

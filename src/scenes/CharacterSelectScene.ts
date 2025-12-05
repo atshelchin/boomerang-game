@@ -4,8 +4,15 @@
  * 支持组队或 Solo 模式
  */
 
-import { Scene, InputSystem } from 'you-engine';
-import { PLAYER_SKINS, GameSettings, DESIGN_WIDTH, DESIGN_HEIGHT, CHARACTER_COLORS, CHARACTER_SHAPES } from '../config/GameConfig';
+import { InputSystem, Scene } from 'you-engine';
+import {
+  CHARACTER_COLORS,
+  CHARACTER_SHAPES,
+  DESIGN_HEIGHT,
+  DESIGN_WIDTH,
+  GameSettings,
+  PLAYER_SKINS,
+} from '../config/GameConfig';
 import { GameState } from '../config/GameState';
 import { i18n } from '../config/i18n';
 import { CharacterRenderer } from '../utils/CharacterRenderer';
@@ -324,8 +331,10 @@ export class CharacterSelectScene extends Scene {
     this.masterManageCursor.animTimer++;
 
     // L(4)/R(5) 或 ZL(6)/ZR(7) 左右移动管理光标
-    const moveLeft = this.input.isButtonPressed(4, gpIndex) || this.input.isButtonPressed(6, gpIndex);
-    const moveRight = this.input.isButtonPressed(5, gpIndex) || this.input.isButtonPressed(7, gpIndex);
+    const moveLeft =
+      this.input.isButtonPressed(4, gpIndex) || this.input.isButtonPressed(6, gpIndex);
+    const moveRight =
+      this.input.isButtonPressed(5, gpIndex) || this.input.isButtonPressed(7, gpIndex);
 
     if (moveLeft || moveRight) {
       const delta = moveRight ? 1 : -1;
@@ -355,8 +364,8 @@ export class CharacterSelectScene extends Scene {
 
         // 确保皮肤不重复
         const usedSkins = this.slots
-          .filter(s => s.type !== 'none' && s !== slot)
-          .map(s => s.skinIndex);
+          .filter((s) => s.type !== 'none' && s !== slot)
+          .map((s) => s.skinIndex);
         while (usedSkins.includes(slot.skinIndex)) {
           slot.skinIndex = (slot.skinIndex + 1) % PLAYER_SKINS.length;
         }
@@ -392,11 +401,13 @@ export class CharacterSelectScene extends Scene {
           const delta = dpadRight ? 1 : -1;
           switch (slot.settingIndex) {
             case 0: // 颜色
-              slot.colorIndex = (slot.colorIndex + delta + CHARACTER_COLORS.length) % CHARACTER_COLORS.length;
+              slot.colorIndex =
+                (slot.colorIndex + delta + CHARACTER_COLORS.length) % CHARACTER_COLORS.length;
               slot.skinIndex = slot.colorIndex; // 保持兼容
               break;
             case 1: // 形状
-              slot.shapeIndex = (slot.shapeIndex + delta + CHARACTER_SHAPES.length) % CHARACTER_SHAPES.length;
+              slot.shapeIndex =
+                (slot.shapeIndex + delta + CHARACTER_SHAPES.length) % CHARACTER_SHAPES.length;
               break;
           }
           this.input.vibrate(gpIndex, { weak: 0.2, duration: 30 });
@@ -447,8 +458,8 @@ export class CharacterSelectScene extends Scene {
 
         // 确保皮肤不重复
         const usedSkins = this.slots
-          .filter(s => s.type !== 'none' && s !== slot)
-          .map(s => s.skinIndex);
+          .filter((s) => s.type !== 'none' && s !== slot)
+          .map((s) => s.skinIndex);
         while (usedSkins.includes(slot.skinIndex)) {
           slot.skinIndex = (slot.skinIndex + 1) % PLAYER_SKINS.length;
         }
@@ -515,7 +526,8 @@ export class CharacterSelectScene extends Scene {
         const delta = dpadRight ? 1 : -1;
         switch (slot.settingIndex) {
           case 0: // 颜色
-            slot.colorIndex = (slot.colorIndex + delta + CHARACTER_COLORS.length) % CHARACTER_COLORS.length;
+            slot.colorIndex =
+              (slot.colorIndex + delta + CHARACTER_COLORS.length) % CHARACTER_COLORS.length;
             slot.skinIndex = slot.colorIndex; // 保持兼容
             break;
           case 1: // 形状（跳过已被占用的）
@@ -559,9 +571,10 @@ export class CharacterSelectScene extends Scene {
 
   /** 检查长按开始 */
   private handleStartHoldCheck(): void {
-    const joinedPlayers = this.slots.filter(s => s.type !== 'none');
-    const allReady = joinedPlayers.every(s => s.ready);
-    const isValidSetup = joinedPlayers.length >= MIN_PLAYERS && allReady && this.validateTeamSetup(joinedPlayers);
+    const joinedPlayers = this.slots.filter((s) => s.type !== 'none');
+    const allReady = joinedPlayers.every((s) => s.ready);
+    const isValidSetup =
+      joinedPlayers.length >= MIN_PLAYERS && allReady && this.validateTeamSetup(joinedPlayers);
 
     // 检查任意已加入玩家是否长按 A
     let holdingStart = false;
@@ -589,7 +602,6 @@ export class CharacterSelectScene extends Scene {
       this.startHoldTimer = 0;
     }
   }
-
 
   /** 处理槽位设置 (颜色/形状/队伍) */
   private handleSlotSettings(slot: PlayerSlot, gpIndex: number): void {
@@ -671,7 +683,6 @@ export class CharacterSelectScene extends Scene {
     slot.shapeIndex = newShapeIndex;
   }
 
-
   private validateTeamSetup(_joinedPlayers: PlayerSlot[]): boolean {
     // 团队模式已移除，始终返回 true
     return true;
@@ -679,7 +690,7 @@ export class CharacterSelectScene extends Scene {
 
   private startGame(): void {
     // 设置游戏配置
-    const joinedSlots = this.slots.filter(s => s.type !== 'none');
+    const joinedSlots = this.slots.filter((s) => s.type !== 'none');
 
     // 保存玩家配置到 GameSettings
     GameSettings.playerCount = joinedSlots.length;
@@ -783,8 +794,10 @@ export class CharacterSelectScene extends Scene {
   /** 渲染所有手柄的光标 */
   private renderCursors(
     ctx: CanvasRenderingContext2D,
-    startX: number, startY: number,
-    slotWidth: number, slotHeight: number,
+    startX: number,
+    startY: number,
+    slotWidth: number,
+    slotHeight: number,
     gap: number
   ): void {
     // 收集每个槽位上的光标
@@ -811,7 +824,8 @@ export class CharacterSelectScene extends Scene {
       // 如果多个光标在同一槽位，水平排列
       const cursorSize = 40;
       const cursorGap = 10;
-      const totalCursorWidth = cursorsOnSlot.length * cursorSize + (cursorsOnSlot.length - 1) * cursorGap;
+      const totalCursorWidth =
+        cursorsOnSlot.length * cursorSize + (cursorsOnSlot.length - 1) * cursorGap;
       const cursorStartX = slotX + (slotWidth - totalCursorWidth) / 2;
       const cursorY = slotY - 50;
 
@@ -916,14 +930,18 @@ export class CharacterSelectScene extends Scene {
   private renderSlot(
     ctx: CanvasRenderingContext2D,
     slot: PlayerSlot,
-    x: number, y: number,
-    w: number, h: number,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
     index: number
   ): void {
     ctx.save();
 
     // 槽位背景
-    const isHovered = slot.type === 'none' && this.connectedGamepads.size > this.slots.filter(s => s.type !== 'none').length;
+    const isHovered =
+      slot.type === 'none' &&
+      this.connectedGamepads.size > this.slots.filter((s) => s.type !== 'none').length;
 
     if (slot.type !== 'none') {
       // 已加入 - 彩色边框
@@ -957,14 +975,17 @@ export class CharacterSelectScene extends Scene {
       // 2. 被主控管理光标指向的CPU可以编辑（主控已加入后用L/R移动）
       // 3. 主控未加入时，光标指向的CPU也可以编辑
       const masterCursor = this.cursors.get(this.masterGamepadIndex);
-      const isCPUBeingManagedByJoinedMaster = slot.type === 'cpu' &&
+      const isCPUBeingManagedByJoinedMaster =
+        slot.type === 'cpu' &&
         this.masterManageCursor.active &&
         this.masterManageCursor.slotIndex === index;
-      const isCPUBeingManagedByUnJoinedMaster = slot.type === 'cpu' &&
+      const isCPUBeingManagedByUnJoinedMaster =
+        slot.type === 'cpu' &&
         masterCursor &&
         masterCursor.joinedSlotIndex < 0 &&
         masterCursor.slotIndex === index;
-      const isCPUBeingManaged = isCPUBeingManagedByJoinedMaster || isCPUBeingManagedByUnJoinedMaster;
+      const isCPUBeingManaged =
+        isCPUBeingManagedByJoinedMaster || isCPUBeingManagedByUnJoinedMaster;
       const canEditSettings = !slot.ready || isCPUBeingManaged;
 
       // ===== 颜色选择行 =====
@@ -1051,7 +1072,6 @@ export class CharacterSelectScene extends Scene {
         ctx.fillText('↑↓ 切换  ← → 选择', x + w / 2, y + h - 50);
         ctx.fillText(`${confirmBtn} 确认  ${cancelBtn} 退出`, x + w / 2, y + h - 30);
       }
-
     } else {
       // 未加入 - 灰色虚线框
       ctx.fillStyle = 'rgba(0,0,0,0.3)';
@@ -1066,7 +1086,9 @@ export class CharacterSelectScene extends Scene {
       // 加入提示
       ctx.textAlign = 'center';
       ctx.font = '20px "Segoe UI", system-ui, sans-serif';
-      ctx.fillStyle = isHovered ? `rgba(78, 205, 196, ${0.5 + this.hintFlash * 0.5})` : 'rgba(255,255,255,0.3)';
+      ctx.fillStyle = isHovered
+        ? `rgba(78, 205, 196, ${0.5 + this.hintFlash * 0.5})`
+        : 'rgba(255,255,255,0.3)';
       ctx.fillText(i18n.t.characterSelect?.pressToJoin || '按任意按钮加入', x + w / 2, y + h / 2);
 
       // 玩家编号
@@ -1081,7 +1103,8 @@ export class CharacterSelectScene extends Scene {
   private renderCharacterPreview(
     ctx: CanvasRenderingContext2D,
     slot: PlayerSlot,
-    x: number, y: number,
+    x: number,
+    y: number,
     _index: number
   ): void {
     const color = CHARACTER_COLORS[slot.colorIndex];
@@ -1148,8 +1171,8 @@ export class CharacterSelectScene extends Scene {
 
     // 已连接手柄数量 - 放在左下角
     const connectedCount = this.connectedGamepads.size;
-    const joinedCount = this.slots.filter(s => s.type !== 'none').length;
-    const readyCount = this.slots.filter(s => s.ready).length;
+    const joinedCount = this.slots.filter((s) => s.type !== 'none').length;
+    const readyCount = this.slots.filter((s) => s.ready).length;
 
     ctx.fillStyle = '#666';
     ctx.fillText(
@@ -1172,9 +1195,9 @@ export class CharacterSelectScene extends Scene {
     const addCpuBtn = this.input.getButtonName(3, gpIndex) || 'Y';
 
     // 检查是否所有加入的玩家都准备好了
-    const joinedSlots = this.slots.filter(s => s.type !== 'none');
+    const joinedSlots = this.slots.filter((s) => s.type !== 'none');
     const joinedCount = joinedSlots.length;
-    const allReady = joinedSlots.every(s => s.ready);
+    const allReady = joinedSlots.every((s) => s.ready);
 
     // 检查是否有未加入的光标
     let hasUnJoinedCursor = false;
@@ -1201,9 +1224,13 @@ export class CharacterSelectScene extends Scene {
     } else if (hasUnJoinedCursor) {
       // 有未加入的光标，显示加入提示
       ctx.fillStyle = `rgba(255,255,255,${0.5 + this.hintFlash * 0.3})`;
-      ctx.fillText(`← → 移动光标  ${confirmBtn} 加入槽位  ${addCpuBtn} 添加/移除CPU（主控）  + 返回`, W / 2, hintY1);
+      ctx.fillText(
+        `← → 移动光标  ${confirmBtn} 加入槽位  ${addCpuBtn} 添加/移除CPU（主控）  + 返回`,
+        W / 2,
+        hintY1
+      );
       ctx.fillStyle = `rgba(78,205,196,${0.5 + this.hintFlash * 0.5})`;
-      ctx.fillText('选择槽位后按 ' + confirmBtn + ' 加入', W / 2, hintY2);
+      ctx.fillText(`选择槽位后按 ${confirmBtn} 加入`, W / 2, hintY2);
     } else {
       // 所有玩家都已加入
       ctx.fillStyle = `rgba(255,255,255,${0.5 + this.hintFlash * 0.3})`;
@@ -1271,11 +1298,7 @@ export class CharacterSelectScene extends Scene {
     ctx.font = '32px "Segoe UI", system-ui, sans-serif';
     ctx.fillStyle = '#fff';
     ctx.shadowBlur = 0;
-    ctx.fillText(
-      i18n.t.characterSelect?.starting || '游戏即将开始...',
-      W / 2,
-      H / 2 + 120
-    );
+    ctx.fillText(i18n.t.characterSelect?.starting || '游戏即将开始...', W / 2, H / 2 + 120);
 
     ctx.restore();
   }

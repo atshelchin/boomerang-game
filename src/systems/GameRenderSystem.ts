@@ -4,29 +4,38 @@
  */
 
 import { System } from 'you-engine';
+import {
+  BOOMERANG_CONFIG,
+  CHARACTER_COLORS,
+  CHARACTER_SHAPES,
+  GameSettings,
+  PLAYER_CONFIG,
+  PLAYER_SKINS,
+  POWERUP_COLORS,
+  TEAM_COLORS,
+} from '../config/GameConfig';
+import { GameState } from '../config/GameState';
+import { i18n } from '../config/i18n';
+import { TUTORIAL_STEPS, TutorialState } from '../config/TutorialState';
 import type {
-  GameEntity,
-  PlayerData,
   BoomerangData,
-  PowerupData,
-  WallData,
-  ParticleData,
-  TrailData,
-  RingData,
-  FloatingTextData,
-  FireTrailData,
-  IceTrailData,
-  TerrainData,
-  PortalData,
   BoulderData,
-  PoisonZoneData
+  FireTrailData,
+  FloatingTextData,
+  GameEntity,
+  IceTrailData,
+  ParticleData,
+  PlayerData,
+  PoisonZoneData,
+  PortalData,
+  PowerupData,
+  RingData,
+  TerrainData,
+  TrailData,
+  WallData,
 } from '../entities/types';
 import { EntityTags } from '../entities/types';
-import { PLAYER_CONFIG, BOOMERANG_CONFIG, POWERUP_COLORS, PLAYER_SKINS, GameSettings, CHARACTER_COLORS, CHARACTER_SHAPES, TEAM_COLORS } from '../config/GameConfig';
 import { CharacterRenderer } from '../utils/CharacterRenderer';
-import { GameState } from '../config/GameState';
-import { TutorialState, TUTORIAL_STEPS } from '../config/TutorialState';
-import { i18n } from '../config/i18n';
 
 export class GameRenderSystem extends System {
   static priority = 100;
@@ -117,7 +126,7 @@ export class GameRenderSystem extends System {
   private renderTrails(ctx: CanvasRenderingContext2D): void {
     const trails = this.engine.world.entities.filter(
       (e): e is GameEntity & { trail: TrailData } =>
-        !!(e.tags?.values.includes(EntityTags.TRAIL)) && e.trail !== undefined
+        !!e.tags?.values.includes(EntityTags.TRAIL) && e.trail !== undefined
     );
 
     for (const trail of trails) {
@@ -142,7 +151,7 @@ export class GameRenderSystem extends System {
   private renderWalls(ctx: CanvasRenderingContext2D): void {
     const walls = this.engine.world.entities.filter(
       (e): e is GameEntity & { wall: WallData } =>
-        !!(e.tags?.values.includes(EntityTags.WALL)) && e.wall !== undefined
+        !!e.tags?.values.includes(EntityTags.WALL) && e.wall !== undefined
     );
 
     const shadowOff = 6;
@@ -237,8 +246,6 @@ export class GameRenderSystem extends System {
             ctx.fill();
           }
           break;
-
-        case 'rect':
         default: {
           // 阴影
           ctx.fillStyle = 'rgba(0,0,0,0.3)';
@@ -265,7 +272,7 @@ export class GameRenderSystem extends System {
   private renderFireTrails(ctx: CanvasRenderingContext2D): void {
     const fireTrails = this.engine.world.entities.filter(
       (e): e is GameEntity & { fireTrail: FireTrailData } =>
-        !!(e.tags?.values.includes(EntityTags.FIRE_TRAIL)) && e.fireTrail !== undefined
+        !!e.tags?.values.includes(EntityTags.FIRE_TRAIL) && e.fireTrail !== undefined
     );
 
     for (const fireTrail of fireTrails) {
@@ -309,7 +316,7 @@ export class GameRenderSystem extends System {
   private renderIceTrails(ctx: CanvasRenderingContext2D): void {
     const iceTrails = this.engine.world.entities.filter(
       (e): e is GameEntity & { iceTrail: IceTrailData } =>
-        !!(e.tags?.values.includes(EntityTags.ICE_TRAIL)) && e.iceTrail !== undefined
+        !!e.tags?.values.includes(EntityTags.ICE_TRAIL) && e.iceTrail !== undefined
     );
 
     for (const iceTrail of iceTrails) {
@@ -365,7 +372,7 @@ export class GameRenderSystem extends System {
   private renderPowerups(ctx: CanvasRenderingContext2D): void {
     const powerups = this.engine.world.entities.filter(
       (e): e is GameEntity & { powerup: PowerupData } =>
-        !!(e.tags?.values.includes(EntityTags.POWERUP)) && e.powerup !== undefined
+        !!e.tags?.values.includes(EntityTags.POWERUP) && e.powerup !== undefined
     );
 
     for (const powerup of powerups) {
@@ -389,7 +396,7 @@ export class GameRenderSystem extends System {
       ctx.globalAlpha = 0.5;
       for (let i = 0; i < 3; i++) {
         ctx.beginPath();
-        ctx.arc(0, 0, 32, i * Math.PI * 2 / 3, i * Math.PI * 2 / 3 + Math.PI / 2);
+        ctx.arc(0, 0, 32, (i * Math.PI * 2) / 3, (i * Math.PI * 2) / 3 + Math.PI / 2);
         ctx.stroke();
       }
       ctx.restore();
@@ -397,7 +404,7 @@ export class GameRenderSystem extends System {
       ctx.scale(pulse, pulse);
 
       // 发光底圈
-      ctx.fillStyle = color + '40';
+      ctx.fillStyle = `${color}40`;
       ctx.beginPath();
       ctx.arc(0, 0, 28, 0, Math.PI * 2);
       ctx.fill();
@@ -422,7 +429,7 @@ export class GameRenderSystem extends System {
       const pu = powerup.powerup;
       if (pu.type === 'triple') {
         for (let i = 0; i < 3; i++) {
-          const a = i * Math.PI * 2 / 3 - Math.PI / 2;
+          const a = (i * Math.PI * 2) / 3 - Math.PI / 2;
           ctx.beginPath();
           ctx.arc(Math.cos(a) * 8, Math.sin(a) * 8, 4, 0, Math.PI * 2);
           ctx.fill();
@@ -528,7 +535,7 @@ export class GameRenderSystem extends System {
   private renderParticles(ctx: CanvasRenderingContext2D): void {
     const particles = this.engine.world.entities.filter(
       (e): e is GameEntity & { particle: ParticleData } =>
-        !!(e.tags?.values.includes(EntityTags.PARTICLE)) && e.particle !== undefined
+        !!e.tags?.values.includes(EntityTags.PARTICLE) && e.particle !== undefined
     );
 
     for (const particle of particles) {
@@ -582,7 +589,7 @@ export class GameRenderSystem extends System {
   private renderBoomerangs(ctx: CanvasRenderingContext2D): void {
     const boomerangs = this.engine.world.entities.filter(
       (e): e is GameEntity & { boomerang: BoomerangData } =>
-        !!(e.tags?.values.includes(EntityTags.BOOMERANG)) && e.boomerang !== undefined
+        !!e.tags?.values.includes(EntityTags.BOOMERANG) && e.boomerang !== undefined
     );
 
     for (const boomerang of boomerangs) {
@@ -590,7 +597,8 @@ export class GameRenderSystem extends System {
 
       const { boomerang: b, transform } = boomerang;
       // 使用玩家配置的 skinIndex（多人模式支持）
-      const ownerSkinIndex = GameSettings.players?.[b.ownerId]?.skinIndex ?? b.ownerId % PLAYER_SKINS.length;
+      const ownerSkinIndex =
+        GameSettings.players?.[b.ownerId]?.skinIndex ?? b.ownerId % PLAYER_SKINS.length;
       const skin = PLAYER_SKINS[ownerSkinIndex];
       const radius = b.isBig ? BOOMERANG_CONFIG.bigRadius : BOOMERANG_CONFIG.radius;
 
@@ -618,7 +626,7 @@ export class GameRenderSystem extends System {
   private renderPlayers(ctx: CanvasRenderingContext2D): void {
     const players = this.engine.world.entities.filter(
       (e): e is GameEntity & { player: PlayerData } =>
-        !!(e.tags?.values.includes(EntityTags.PLAYER)) && e.player !== undefined
+        !!e.tags?.values.includes(EntityTags.PLAYER) && e.player !== undefined
     );
 
     for (const player of players) {
@@ -628,8 +636,13 @@ export class GameRenderSystem extends System {
 
       // 获取玩家配置（颜色、形状、队伍）- 优先从玩家实体获取，再从 GameSettings 获取
       const playerConfig = GameSettings.players?.[p.playerId];
-      const colorIndex = p.colorIndex ?? playerConfig?.colorIndex ?? p.skinIndex ?? p.playerId % CHARACTER_COLORS.length;
-      const shapeIndex = p.shapeIndex ?? playerConfig?.shapeIndex ?? p.playerId % CHARACTER_SHAPES.length;
+      const colorIndex =
+        p.colorIndex ??
+        playerConfig?.colorIndex ??
+        p.skinIndex ??
+        p.playerId % CHARACTER_COLORS.length;
+      const shapeIndex =
+        p.shapeIndex ?? playerConfig?.shapeIndex ?? p.playerId % CHARACTER_SHAPES.length;
       const teamIndex = p.teamIndex ?? playerConfig?.teamIndex ?? -1;
 
       const hasTeam = teamIndex >= 0;
@@ -666,7 +679,15 @@ export class GameRenderSystem extends System {
       ctx.fill();
 
       // 使用 CharacterRenderer 绘制角色形状
-      CharacterRenderer.renderShape(ctx, shape.id, color.color1, color.color2, radius, p.angle, GameState.time);
+      CharacterRenderer.renderShape(
+        ctx,
+        shape.id,
+        color.color1,
+        color.color2,
+        radius,
+        p.angle,
+        GameState.time
+      );
 
       // 冰冻效果
       if (p.frozen) {
@@ -787,7 +808,7 @@ export class GameRenderSystem extends System {
     const flash = Math.sin(GameState.time * 0.2) * 0.2 + 0.8;
     const badgeSize = 14;
     const spacing = 32;
-    const startX = -(p.powerups.length - 1) * spacing / 2;
+    const startX = (-(p.powerups.length - 1) * spacing) / 2;
 
     p.powerups.forEach((pu, idx) => {
       const puColor = POWERUP_COLORS[pu.type];
@@ -830,7 +851,7 @@ export class GameRenderSystem extends System {
 
       if (pu.type === 'triple') {
         for (let i = 0; i < 3; i++) {
-          const a = i * Math.PI * 2 / 3 - Math.PI / 2;
+          const a = (i * Math.PI * 2) / 3 - Math.PI / 2;
           ctx.beginPath();
           ctx.arc(Math.cos(a) * 5, Math.sin(a) * 5, 2, 0, Math.PI * 2);
           ctx.fill();
@@ -938,7 +959,8 @@ export class GameRenderSystem extends System {
    */
   private renderChargingAim(
     ctx: CanvasRenderingContext2D,
-    x: number, y: number,
+    x: number,
+    y: number,
     p: PlayerData,
     skin: { color1: string; color2: string },
     radius: number
@@ -1014,7 +1036,10 @@ export class GameRenderSystem extends System {
       const startR = 50;
       ctx.beginPath();
       ctx.moveTo(Math.cos(tickAngle) * startR, Math.sin(tickAngle) * startR);
-      ctx.lineTo(Math.cos(tickAngle) * (startR + tickLen), Math.sin(tickAngle) * (startR + tickLen));
+      ctx.lineTo(
+        Math.cos(tickAngle) * (startR + tickLen),
+        Math.sin(tickAngle) * (startR + tickLen)
+      );
       ctx.stroke();
     }
 
@@ -1045,7 +1070,7 @@ export class GameRenderSystem extends System {
 
       // 发光粒子
       for (let i = 0; i < 4; i++) {
-        const sparkAngle = GameState.time * 0.1 + i * Math.PI / 2;
+        const sparkAngle = GameState.time * 0.1 + (i * Math.PI) / 2;
         const sparkR = radius + 15;
         ctx.fillStyle = '#fff';
         ctx.beginPath();
@@ -1078,17 +1103,25 @@ export class GameRenderSystem extends System {
     const num = parseInt(color.replace('#', ''), 16);
     const amt = Math.round(2.55 * percent);
     const R = (num >> 16) + amt;
-    const G = (num >> 8 & 0x00FF) + amt;
-    const B = (num & 0x0000FF) + amt;
-    return '#' + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
-      (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
-      (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
+    const G = ((num >> 8) & 0x00ff) + amt;
+    const B = (num & 0x0000ff) + amt;
+    return (
+      '#' +
+      (
+        0x1000000 +
+        (R < 255 ? (R < 1 ? 0 : R) : 255) * 0x10000 +
+        (G < 255 ? (G < 1 ? 0 : G) : 255) * 0x100 +
+        (B < 255 ? (B < 1 ? 0 : B) : 255)
+      )
+        .toString(16)
+        .slice(1)
+    );
   }
 
   private renderRings(ctx: CanvasRenderingContext2D): void {
     const rings = this.engine.world.entities.filter(
       (e): e is GameEntity & { ring: RingData } =>
-        !!(e.tags?.values.includes(EntityTags.RING)) && e.ring !== undefined
+        !!e.tags?.values.includes(EntityTags.RING) && e.ring !== undefined
     );
 
     for (const ring of rings) {
@@ -1119,7 +1152,7 @@ export class GameRenderSystem extends System {
   private renderFloatingTexts(ctx: CanvasRenderingContext2D): void {
     const texts = this.engine.world.entities.filter(
       (e): e is GameEntity & { floatingText: FloatingTextData } =>
-        !!(e.tags?.values.includes(EntityTags.FLOATING_TEXT)) && e.floatingText !== undefined
+        !!e.tags?.values.includes(EntityTags.FLOATING_TEXT) && e.floatingText !== undefined
     );
 
     for (const text of texts) {
@@ -1153,7 +1186,7 @@ export class GameRenderSystem extends System {
     // READY 倒计时
     if (GameState.state === 'ready') {
       const countdown = Math.ceil(GameState.stateTimer / 15);
-      const pulseScale = 1 + (GameState.stateTimer % 15) / 15 * 0.3;
+      const pulseScale = 1 + ((GameState.stateTimer % 15) / 15) * 0.3;
 
       ctx.save();
       ctx.fillStyle = '#fff';
@@ -1230,35 +1263,35 @@ export class GameRenderSystem extends System {
 
     // 步骤标题
     const stepTitles: Record<string, string> = {
-      'intro': t.intro,
-      'move': t.move,
-      'throw': t.throw,
-      'catch': t.catch,
-      'charge': t.charge,
-      'dash': t.dash,
-      'powerup_triple': t.powerupTriple,
-      'powerup_big': t.powerupBig,
-      'powerup_speed': t.powerupSpeed,
-      'powerup_shield': t.powerupShield,
-      'powerup_magnet': t.powerupMagnet,
-      'kill': t.kill,
-      'complete': t.complete,
+      intro: t.intro,
+      move: t.move,
+      throw: t.throw,
+      catch: t.catch,
+      charge: t.charge,
+      dash: t.dash,
+      powerup_triple: t.powerupTriple,
+      powerup_big: t.powerupBig,
+      powerup_speed: t.powerupSpeed,
+      powerup_shield: t.powerupShield,
+      powerup_magnet: t.powerupMagnet,
+      kill: t.kill,
+      complete: t.complete,
     };
 
     const stepDescs: Record<string, string> = {
-      'intro': t.introDesc,
-      'move': t.moveDesc,
-      'throw': t.throwDesc,
-      'catch': t.catchDesc,
-      'charge': t.chargeDesc,
-      'dash': t.dashDesc,
-      'powerup_triple': t.powerupTripleDesc,
-      'powerup_big': t.powerupBigDesc,
-      'powerup_speed': t.powerupSpeedDesc,
-      'powerup_shield': t.powerupShieldDesc,
-      'powerup_magnet': t.powerupMagnetDesc,
-      'kill': t.killDesc,
-      'complete': t.completeDesc,
+      intro: t.introDesc,
+      move: t.moveDesc,
+      throw: t.throwDesc,
+      catch: t.catchDesc,
+      charge: t.chargeDesc,
+      dash: t.dashDesc,
+      powerup_triple: t.powerupTripleDesc,
+      powerup_big: t.powerupBigDesc,
+      powerup_speed: t.powerupSpeedDesc,
+      powerup_shield: t.powerupShieldDesc,
+      powerup_magnet: t.powerupMagnetDesc,
+      kill: t.killDesc,
+      complete: t.completeDesc,
     };
 
     const title = stepTitles[step.type] || step.type;
@@ -1288,7 +1321,7 @@ export class GameRenderSystem extends System {
       // 完成提示
       ctx.fillStyle = '#4caf50';
       ctx.font = 'bold 20px "Segoe UI", system-ui, sans-serif';
-      ctx.fillText(t.stepComplete + ' ' + t.pressAnyButton, W / 2, hintBoxY + 70);
+      ctx.fillText(`${t.stepComplete} ${t.pressAnyButton}`, W / 2, hintBoxY + 70);
     } else {
       // 跳过提示
       ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
@@ -1341,7 +1374,7 @@ export class GameRenderSystem extends System {
     ctx.fillRect(0, 0, W, H);
 
     // 获取最终胜者信息
-    const winner = players.find(p => p.playerId === GameState.roundWinner);
+    const winner = players.find((p) => p.playerId === GameState.roundWinner);
     if (!winner) {
       ctx.restore();
       return;
@@ -1357,9 +1390,9 @@ export class GameRenderSystem extends System {
       : CHARACTER_COLORS[winnerColorIndex];
 
     // 动画阶段
-    const phase1 = Math.min(1, animTime / 30);  // 0-30帧：入场
-    const phase2 = Math.min(1, Math.max(0, animTime - 30) / 30);  // 30-60帧：文字
-    const phase3 = Math.min(1, Math.max(0, animTime - 60) / 30);  // 60-90帧：角色展示
+    const phase1 = Math.min(1, animTime / 30); // 0-30帧：入场
+    const phase2 = Math.min(1, Math.max(0, animTime - 30) / 30); // 30-60帧：文字
+    const phase3 = Math.min(1, Math.max(0, animTime - 60) / 30); // 60-90帧：角色展示
 
     // 背景光芒放射效果
     ctx.save();
@@ -1400,7 +1433,7 @@ export class GameRenderSystem extends System {
       const alpha = 0.3 + Math.sin(animTime * 0.1 + seed) * 0.2;
 
       ctx.globalAlpha = alpha * phase1;
-      ctx.fillStyle = i % 3 === 0 ? '#ffd700' : (i % 3 === 1 ? winnerColor.color1 : '#fff');
+      ctx.fillStyle = i % 3 === 0 ? '#ffd700' : i % 3 === 1 ? winnerColor.color1 : '#fff';
       ctx.beginPath();
       ctx.arc(px, py, size, 0, Math.PI * 2);
       ctx.fill();
@@ -1452,7 +1485,7 @@ export class GameRenderSystem extends System {
 
     // 获取所有队伍成员（如果是队伍胜利）
     const winningMembers = winnerHasTeam
-      ? players.filter(p => {
+      ? players.filter((p) => {
           const config = GameSettings.players?.[p.playerId];
           return config?.teamIndex === winnerTeamIndex;
         })
@@ -1481,7 +1514,7 @@ export class GameRenderSystem extends System {
         ctx.translate(avatarX, avatarY + bounce + entryOffset);
 
         // 角色下方光圈
-        ctx.fillStyle = winnerColor.color1 + '40';
+        ctx.fillStyle = `${winnerColor.color1}40`;
         ctx.beginPath();
         ctx.ellipse(0, bigRadius + 10, bigRadius * 1.2, bigRadius * 0.3, 0, 0, Math.PI * 2);
         ctx.fill();
@@ -1497,7 +1530,15 @@ export class GameRenderSystem extends System {
         ctx.globalAlpha = phase3;
 
         // 渲染角色
-        CharacterRenderer.renderShape(ctx, shape.id, winnerColor.color1, winnerColor.color2, bigRadius, 0, GameState.time);
+        CharacterRenderer.renderShape(
+          ctx,
+          shape.id,
+          winnerColor.color1,
+          winnerColor.color2,
+          bigRadius,
+          0,
+          GameState.time
+        );
 
         // 玩家编号标签
         ctx.font = 'bold 18px "Segoe UI", system-ui, sans-serif';
@@ -1509,7 +1550,7 @@ export class GameRenderSystem extends System {
       }
 
       // 皇冠（在中间角色上方）
-      const crownX = avatarStartX + (winningMembers.length - 1) * (bigRadius * 2 + avatarGap) / 2;
+      const crownX = avatarStartX + ((winningMembers.length - 1) * (bigRadius * 2 + avatarGap)) / 2;
       const crownY = avatarY - bigRadius - 30;
       const crownBob = Math.sin(animTime * 0.08) * 5;
 
@@ -1543,11 +1584,14 @@ export class GameRenderSystem extends System {
         const pColorIndex = pConfig?.colorIndex ?? p.playerId % CHARACTER_COLORS.length;
         const pShapeIndex = pConfig?.shapeIndex ?? p.playerId % CHARACTER_SHAPES.length;
         const pColor = pHasTeam
-          ? { color1: TEAM_COLORS[pTeamIndex].color, color2: this.darkenColor(TEAM_COLORS[pTeamIndex].color, 0.3) }
+          ? {
+              color1: TEAM_COLORS[pTeamIndex].color,
+              color2: this.darkenColor(TEAM_COLORS[pTeamIndex].color, 0.3),
+            }
           : CHARACTER_COLORS[pColorIndex];
         const pShape = CHARACTER_SHAPES[pShapeIndex];
 
-        const isWinningMember = winningMembers.some(m => m.playerId === p.playerId);
+        const isWinningMember = winningMembers.some((m) => m.playerId === p.playerId);
         const px = allStartX + i * (smallRadius * 2 + smallGap);
 
         ctx.save();
@@ -1563,7 +1607,15 @@ export class GameRenderSystem extends System {
         }
 
         // 渲染角色
-        CharacterRenderer.renderShape(ctx, pShape.id, pColor.color1, pColor.color2, smallRadius, 0, GameState.time);
+        CharacterRenderer.renderShape(
+          ctx,
+          pShape.id,
+          pColor.color1,
+          pColor.color2,
+          smallRadius,
+          0,
+          GameState.time
+        );
 
         // 分数
         ctx.font = 'bold 14px "Segoe UI", system-ui, sans-serif';
@@ -1620,12 +1672,13 @@ export class GameRenderSystem extends System {
     ctx.textBaseline = 'middle';
 
     // 获取胜者信息
-    const winner = players.find(p => p.playerId === GameState.roundWinner);
+    const winner = players.find((p) => p.playerId === GameState.roundWinner);
     const winnerConfig = winner ? GameSettings.players?.[winner.playerId] : null;
     const winnerTeamIndex = winnerConfig?.teamIndex ?? -1;
     const winnerHasTeam = winnerTeamIndex >= 0;
     const winnerTeamColor = winnerHasTeam ? TEAM_COLORS[winnerTeamIndex] : null;
-    const winnerColorIndex = winnerConfig?.colorIndex ?? (winner?.playerId ?? 0) % CHARACTER_COLORS.length;
+    const winnerColorIndex =
+      winnerConfig?.colorIndex ?? (winner?.playerId ?? 0) % CHARACTER_COLORS.length;
     const winnerColor = winnerHasTeam
       ? { color1: winnerTeamColor!.color, color2: this.darkenColor(winnerTeamColor!.color, 0.3) }
       : CHARACTER_COLORS[winnerColorIndex];
@@ -1636,7 +1689,9 @@ export class GameRenderSystem extends System {
       ctx.fillStyle = winnerColor.color1;
       ctx.shadowColor = winnerColor.color1;
       ctx.shadowBlur = 40;
-      const winText = winnerHasTeam ? `${TEAM_COLORS[winnerTeamIndex].name} WINS!` : `P${winner.playerId + 1} WINS!`;
+      const winText = winnerHasTeam
+        ? `${TEAM_COLORS[winnerTeamIndex].name} WINS!`
+        : `P${winner.playerId + 1} WINS!`;
       ctx.fillText(winText, W / 2, 100);
       ctx.shadowBlur = 0;
     }
@@ -1658,9 +1713,10 @@ export class GameRenderSystem extends System {
     const progressY = H - 80;
     const progressW = W - 200;
     const progressX = 100;
-    const progress = GameState.replayBuffer.length > 0
-      ? GameState.replayPlaybackIndex / GameState.replayBuffer.length
-      : 0;
+    const progress =
+      GameState.replayBuffer.length > 0
+        ? GameState.replayPlaybackIndex / GameState.replayBuffer.length
+        : 0;
 
     ctx.fillStyle = 'rgba(50,50,70,0.8)';
     ctx.beginPath();
@@ -1688,7 +1744,7 @@ export class GameRenderSystem extends System {
     ctx.roundRect(scoreboardX - 20, scoreboardY - 10, scoreboardW + 40, scoreboardH + 20, 12);
     ctx.fill();
 
-    ctx.strokeStyle = winnerColor.color1 + '40';
+    ctx.strokeStyle = `${winnerColor.color1}40`;
     ctx.lineWidth = 2;
     ctx.stroke();
 
@@ -1700,7 +1756,7 @@ export class GameRenderSystem extends System {
 
       const isWinnerGroup = winnerHasTeam
         ? group.teamIndex === winnerTeamIndex
-        : group.members.some(m => m.playerId === GameState.roundWinner);
+        : group.members.some((m) => m.playerId === GameState.roundWinner);
 
       // 行背景
       ctx.fillStyle = isWinnerGroup ? `${group.color.color1}30` : 'rgba(40,40,60,0.4)';
@@ -1741,7 +1797,15 @@ export class GameRenderSystem extends System {
 
         ctx.save();
         ctx.translate(avatarX, avatarY);
-        CharacterRenderer.renderShape(ctx, shape.id, group.color.color1, group.color.color2, avatarRadius, 0, GameState.time);
+        CharacterRenderer.renderShape(
+          ctx,
+          shape.id,
+          group.color.color1,
+          group.color.color2,
+          avatarRadius,
+          0,
+          GameState.time
+        );
         ctx.restore();
       }
 
@@ -1768,7 +1832,16 @@ export class GameRenderSystem extends System {
       // 分数圆圈
       const circlesStartX = scoreboardX + 250;
       const previousScore = group.previousScore;
-      this.renderScoreCirclesHorizontal(ctx, circlesStartX, avatarY, group.score, previousScore, winScore, group.color.color1, isWinnerGroup);
+      this.renderScoreCirclesHorizontal(
+        ctx,
+        circlesStartX,
+        avatarY,
+        group.score,
+        previousScore,
+        winScore,
+        group.color.color1,
+        isWinnerGroup
+      );
     }
 
     // 回合数
@@ -1785,7 +1858,11 @@ export class GameRenderSystem extends System {
     } else {
       const hintAlpha = 0.6 + Math.sin(GameState.time * 0.15) * 0.4;
       ctx.fillStyle = `rgba(255,215,0,${hintAlpha})`;
-      const winnerName = winner ? (winnerHasTeam ? TEAM_COLORS[winnerTeamIndex].name : `P${winner.playerId + 1}`) : '';
+      const winnerName = winner
+        ? winnerHasTeam
+          ? TEAM_COLORS[winnerTeamIndex].name
+          : `P${winner.playerId + 1}`
+        : '';
       ctx.fillText(`${winnerName} 按键确认继续`, W / 2, H - 20);
     }
 
@@ -1879,7 +1956,10 @@ export class GameRenderSystem extends System {
       const shapeIndex = playerConfig?.shapeIndex ?? p.playerId % CHARACTER_SHAPES.length;
 
       const color = hasTeam
-        ? { color1: TEAM_COLORS[teamIndex].color, color2: this.darkenColor(TEAM_COLORS[teamIndex].color, 0.3) }
+        ? {
+            color1: TEAM_COLORS[teamIndex].color,
+            color2: this.darkenColor(TEAM_COLORS[teamIndex].color, 0.3),
+          }
         : CHARACTER_COLORS[colorIndex];
       const shape = CHARACTER_SHAPES[shapeIndex];
 
@@ -1893,7 +1973,15 @@ export class GameRenderSystem extends System {
 
       // 绘制角色
       const radius = PLAYER_CONFIG.radius;
-      CharacterRenderer.renderShape(ctx, shape.id, color.color1, color.color2, radius, p.angle, GameState.time);
+      CharacterRenderer.renderShape(
+        ctx,
+        shape.id,
+        color.color1,
+        color.color2,
+        radius,
+        p.angle,
+        GameState.time
+      );
 
       // 冲刺效果
       if (p.dashing) {
@@ -1987,8 +2075,10 @@ export class GameRenderSystem extends System {
       // 队伍分数取第一个成员的分数（队伍内共享分数）
       // 实际上应该是队伍总分，但当前设计是个人分数
       // 这里我们使用队伍内最高分作为队伍分数
-      const score = Math.max(...members.map(m => m.score));
-      const previousScore = Math.max(...members.map(m => GameState.previousScores[m.playerId] ?? 0));
+      const score = Math.max(...members.map((m) => m.score));
+      const previousScore = Math.max(
+        ...members.map((m) => GameState.previousScores[m.playerId] ?? 0)
+      );
 
       let color: { color1: string; color2: string };
       if (isTeam) {
@@ -1996,7 +2086,8 @@ export class GameRenderSystem extends System {
         color = { color1: teamColor.color, color2: this.darkenColor(teamColor.color, 0.3) };
       } else {
         const playerConfig = GameSettings.players?.[members[0].playerId];
-        const colorIndex = playerConfig?.colorIndex ?? members[0].playerId % CHARACTER_COLORS.length;
+        const colorIndex =
+          playerConfig?.colorIndex ?? members[0].playerId % CHARACTER_COLORS.length;
         color = CHARACTER_COLORS[colorIndex];
       }
 
@@ -2089,7 +2180,13 @@ export class GameRenderSystem extends System {
           // 内部小高光
           ctx.fillStyle = 'rgba(255,255,255,0.3)';
           ctx.beginPath();
-          ctx.arc(cx - circleRadius * 0.3, cy - circleRadius * 0.3, circleRadius * 0.25, 0, Math.PI * 2);
+          ctx.arc(
+            cx - circleRadius * 0.3,
+            cy - circleRadius * 0.3,
+            circleRadius * 0.25,
+            0,
+            Math.PI * 2
+          );
           ctx.fill();
         }
       } else {
@@ -2160,7 +2257,7 @@ export class GameRenderSystem extends System {
   private renderTerrains(ctx: CanvasRenderingContext2D): void {
     const terrains = this.engine.world.entities.filter(
       (e): e is GameEntity & { terrain: TerrainData } =>
-        !!(e.tags?.values.includes(EntityTags.TERRAIN)) && e.terrain !== undefined
+        !!e.tags?.values.includes(EntityTags.TERRAIN) && e.terrain !== undefined
     );
 
     for (const terrain of terrains) {
@@ -2200,7 +2297,6 @@ export class GameRenderSystem extends System {
         ctx.strokeStyle = 'rgba(150, 200, 255, 0.5)';
         ctx.lineWidth = 2;
         ctx.strokeRect(-halfW, -halfH, t.width, t.height);
-
       } else if (t.type === 'water') {
         // 水面渲染 - 深蓝色带波纹
         const waterGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, Math.max(halfW, halfH));
@@ -2242,7 +2338,7 @@ export class GameRenderSystem extends System {
   private renderPortals(ctx: CanvasRenderingContext2D): void {
     const portals = this.engine.world.entities.filter(
       (e): e is GameEntity & { portal: PortalData } =>
-        !!(e.tags?.values.includes(EntityTags.PORTAL)) && e.portal !== undefined
+        !!e.tags?.values.includes(EntityTags.PORTAL) && e.portal !== undefined
     );
 
     for (const portal of portals) {
@@ -2282,7 +2378,7 @@ export class GameRenderSystem extends System {
       // 中心漩涡
       const vortexGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, p.radius);
       vortexGrad.addColorStop(0, p.color);
-      vortexGrad.addColorStop(0.5, p.color + '80');
+      vortexGrad.addColorStop(0.5, `${p.color}80`);
       vortexGrad.addColorStop(1, 'transparent');
 
       ctx.fillStyle = vortexGrad;
@@ -2309,7 +2405,7 @@ export class GameRenderSystem extends System {
   private renderBoulders(ctx: CanvasRenderingContext2D): void {
     const boulders = this.engine.world.entities.filter(
       (e): e is GameEntity & { boulder: BoulderData } =>
-        !!(e.tags?.values.includes(EntityTags.BOULDER)) && e.boulder !== undefined
+        !!e.tags?.values.includes(EntityTags.BOULDER) && e.boulder !== undefined
     );
 
     for (const boulder of boulders) {
@@ -2334,7 +2430,14 @@ export class GameRenderSystem extends System {
         ctx.save();
         ctx.rotate(rollAngle);
 
-        const stoneGrad = ctx.createRadialGradient(-b.radius * 0.3, -b.radius * 0.3, 0, 0, 0, b.radius);
+        const stoneGrad = ctx.createRadialGradient(
+          -b.radius * 0.3,
+          -b.radius * 0.3,
+          0,
+          0,
+          0,
+          b.radius
+        );
         stoneGrad.addColorStop(0, '#8b7355');
         stoneGrad.addColorStop(0.5, '#6b5344');
         stoneGrad.addColorStop(1, '#4a3a2a');
@@ -2359,7 +2462,15 @@ export class GameRenderSystem extends System {
         // 高光
         ctx.fillStyle = 'rgba(255,255,255,0.2)';
         ctx.beginPath();
-        ctx.ellipse(-b.radius * 0.3, -b.radius * 0.3, b.radius * 0.3, b.radius * 0.2, -0.5, 0, Math.PI * 2);
+        ctx.ellipse(
+          -b.radius * 0.3,
+          -b.radius * 0.3,
+          b.radius * 0.3,
+          b.radius * 0.2,
+          -0.5,
+          0,
+          Math.PI * 2
+        );
         ctx.fill();
 
         ctx.restore();
@@ -2391,7 +2502,7 @@ export class GameRenderSystem extends System {
         ctx.stroke();
 
         // 倒计时指示
-        const chargeRatio = 1 - (b.spawnTimer / b.spawnInterval);
+        const chargeRatio = 1 - b.spawnTimer / b.spawnInterval;
         if (chargeRatio > 0.5) {
           ctx.strokeStyle = `rgba(255, ${Math.floor(255 - chargeRatio * 200)}, 0, ${chargeRatio})`;
           ctx.lineWidth = 3;
@@ -2411,7 +2522,7 @@ export class GameRenderSystem extends System {
   private renderPoisonZones(ctx: CanvasRenderingContext2D): void {
     const poisonZones = this.engine.world.entities.filter(
       (e): e is GameEntity & { poisonZone: PoisonZoneData } =>
-        !!(e.tags?.values.includes(EntityTags.POISON_ZONE)) && e.poisonZone !== undefined
+        !!e.tags?.values.includes(EntityTags.POISON_ZONE) && e.poisonZone !== undefined
     );
 
     for (const zone of poisonZones) {

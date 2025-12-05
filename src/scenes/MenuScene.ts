@@ -2,7 +2,7 @@
  * 菜单场景
  */
 
-import { Scene, InputSystem } from 'you-engine';
+import { InputSystem, Scene } from 'you-engine';
 import { GameSettings, PLAYER_SKINS } from '../config/GameConfig';
 import { GameState } from '../config/GameState';
 import { i18n } from '../config/i18n';
@@ -88,10 +88,9 @@ export class MenuScene extends Scene {
             document.getElementById('settingsPanel')?.classList.remove('hidden');
             break;
           case 'debug':
-            GameSettings.gameMode = 'tutorial';  // 复用 tutorial 模式的状态
+            GameSettings.gameMode = 'tutorial'; // 复用 tutorial 模式的状态
             this.engine.goto('debug');
             break;
-          case 'start':
           default:
             // 进入角色选择界面
             this.engine.goto('select');
@@ -114,7 +113,8 @@ export class MenuScene extends Scene {
     const settingsCount = 6; // 回合、AI难度、音效、震动、语言、返回
 
     if (Math.abs(moveY) > 0.5) {
-      this.settingIndex = (this.settingIndex + (moveY > 0 ? 1 : -1) + settingsCount) % settingsCount;
+      this.settingIndex =
+        (this.settingIndex + (moveY > 0 ? 1 : -1) + settingsCount) % settingsCount;
       this.updateSettingRowSelection();
       this.menuCooldown = 12;
     }
@@ -163,7 +163,7 @@ export class MenuScene extends Scene {
 
   private setupMenuEvents(): void {
     // 设置按钮点击事件
-    document.querySelectorAll('.setting-btn').forEach(btn => {
+    document.querySelectorAll('.setting-btn').forEach((btn) => {
       btn.addEventListener('click', () => {
         const setting = btn.getAttribute('data-setting');
         const delta = parseInt(btn.getAttribute('data-delta') || '0', 10);
@@ -254,16 +254,24 @@ export class MenuScene extends Scene {
     if (roundsValue) roundsValue.textContent = String(GameSettings.winScore);
 
     // AI 难度使用 i18n
-    const aiNames = [i18n.t.aiDifficulty.easy, i18n.t.aiDifficulty.normal, i18n.t.aiDifficulty.hard];
+    const aiNames = [
+      i18n.t.aiDifficulty.easy,
+      i18n.t.aiDifficulty.normal,
+      i18n.t.aiDifficulty.hard,
+    ];
     if (aiValue) aiValue.textContent = aiNames[GameSettings.aiDifficulty];
 
     if (soundToggle) {
-      soundToggle.textContent = GameSettings.soundEnabled ? i18n.t.settings.on : i18n.t.settings.off;
+      soundToggle.textContent = GameSettings.soundEnabled
+        ? i18n.t.settings.on
+        : i18n.t.settings.off;
       soundToggle.classList.toggle('active', GameSettings.soundEnabled);
     }
 
     if (vibrationToggle) {
-      vibrationToggle.textContent = GameSettings.vibrationEnabled ? i18n.t.settings.on : i18n.t.settings.off;
+      vibrationToggle.textContent = GameSettings.vibrationEnabled
+        ? i18n.t.settings.on
+        : i18n.t.settings.off;
       vibrationToggle.classList.toggle('active', GameSettings.vibrationEnabled);
     }
 
@@ -330,8 +338,16 @@ export class MenuScene extends Scene {
     if (settingsTitle) settingsTitle.textContent = t.settings.title;
 
     // 设置项标签
-    const settingLabels = document.querySelectorAll('#settingsPanel .setting-row > span:first-child');
-    const labelTexts = [t.settings.winRounds, t.settings.aiDifficulty, t.settings.sound, t.settings.vibration, t.settings.language];
+    const settingLabels = document.querySelectorAll(
+      '#settingsPanel .setting-row > span:first-child'
+    );
+    const labelTexts = [
+      t.settings.winRounds,
+      t.settings.aiDifficulty,
+      t.settings.sound,
+      t.settings.vibration,
+      t.settings.language,
+    ];
     settingLabels.forEach((label, i) => {
       if (labelTexts[i]) label.textContent = labelTexts[i];
     });

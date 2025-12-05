@@ -4,11 +4,18 @@
  */
 
 import { System } from 'you-engine';
-import type { GameEntity, PlayerData, TerrainData, PortalData, BoulderData, PoisonZoneData } from '../entities/types';
-import { EntityTags } from '../entities/types';
-import { createRollingBoulder, spawnParticles } from '../entities/factories';
-import { DESIGN_WIDTH, DESIGN_HEIGHT, PLAYER_CONFIG } from '../config/GameConfig';
+import { DESIGN_HEIGHT, DESIGN_WIDTH, PLAYER_CONFIG } from '../config/GameConfig';
 import { GameState } from '../config/GameState';
+import { createRollingBoulder, spawnParticles } from '../entities/factories';
+import type {
+  BoulderData,
+  GameEntity,
+  PlayerData,
+  PoisonZoneData,
+  PortalData,
+  TerrainData,
+} from '../entities/types';
+import { EntityTags } from '../entities/types';
 
 export class TerrainSystem extends System {
   static priority = 15;
@@ -26,27 +33,27 @@ export class TerrainSystem extends System {
 
     const players = this.engine.world.entities.filter(
       (e): e is GameEntity & { player: PlayerData } =>
-        !!(e.tags?.values.includes(EntityTags.PLAYER)) && e.player !== undefined
+        !!e.tags?.values.includes(EntityTags.PLAYER) && e.player !== undefined
     );
 
     const terrains = this.engine.world.entities.filter(
       (e): e is GameEntity & { terrain: TerrainData } =>
-        !!(e.tags?.values.includes(EntityTags.TERRAIN)) && e.terrain !== undefined
+        !!e.tags?.values.includes(EntityTags.TERRAIN) && e.terrain !== undefined
     );
 
     const portals = this.engine.world.entities.filter(
       (e): e is GameEntity & { portal: PortalData } =>
-        !!(e.tags?.values.includes(EntityTags.PORTAL)) && e.portal !== undefined
+        !!e.tags?.values.includes(EntityTags.PORTAL) && e.portal !== undefined
     );
 
     const boulders = this.engine.world.entities.filter(
       (e): e is GameEntity & { boulder: BoulderData } =>
-        !!(e.tags?.values.includes(EntityTags.BOULDER)) && e.boulder !== undefined
+        !!e.tags?.values.includes(EntityTags.BOULDER) && e.boulder !== undefined
     );
 
     const poisonZones = this.engine.world.entities.filter(
       (e): e is GameEntity & { poisonZone: PoisonZoneData } =>
-        !!(e.tags?.values.includes(EntityTags.POISON_ZONE)) && e.poisonZone !== undefined
+        !!e.tags?.values.includes(EntityTags.POISON_ZONE) && e.poisonZone !== undefined
     );
 
     // 处理地形效果
@@ -126,7 +133,7 @@ export class TerrainSystem extends System {
       speedMax: 8,
       colors: ['#4fc3f7', '#29b6f6', '#03a9f4', '#fff'],
       sizeMin: 4,
-      sizeMax: 8
+      sizeMax: 8,
     });
     for (const p of particles) {
       this.engine.spawn(p);
@@ -134,9 +141,9 @@ export class TerrainSystem extends System {
 
     this.engine.emit('player:death', {
       victimId: player.player.playerId,
-      killerId: -1,  // 环境击杀
+      killerId: -1, // 环境击杀
       x: player.transform.x,
-      y: player.transform.y
+      y: player.transform.y,
     });
   }
 
@@ -167,8 +174,8 @@ export class TerrainSystem extends System {
 
         if (dist < portal.portal.radius + PLAYER_CONFIG.radius * 0.5) {
           // 找到链接的传送门
-          const linkedPortal = portals.find(p => p.portal?.id === portal.portal.linkedPortalId);
-          if (linkedPortal && linkedPortal.transform) {
+          const linkedPortal = portals.find((p) => p.portal?.id === portal.portal.linkedPortalId);
+          if (linkedPortal?.transform) {
             // 传送玩家
             player.transform.x = linkedPortal.transform.x;
             player.transform.y = linkedPortal.transform.y;
@@ -178,14 +185,18 @@ export class TerrainSystem extends System {
 
             // 传送特效
             this.spawnPortalEffect(portal.transform.x, portal.transform.y, portal.portal.color);
-            this.spawnPortalEffect(linkedPortal.transform.x, linkedPortal.transform.y, linkedPortal.portal?.color ?? '#a855f7');
+            this.spawnPortalEffect(
+              linkedPortal.transform.x,
+              linkedPortal.transform.y,
+              linkedPortal.portal?.color ?? '#a855f7'
+            );
 
             this.engine.emit('portal:teleport', {
               playerId: player.player.playerId,
               fromX: portal.transform.x,
               fromY: portal.transform.y,
               toX: linkedPortal.transform.x,
-              toY: linkedPortal.transform.y
+              toY: linkedPortal.transform.y,
             });
 
             break;
@@ -210,7 +221,7 @@ export class TerrainSystem extends System {
       speedMax: 6,
       colors: [color, '#fff', color],
       sizeMin: 3,
-      sizeMax: 6
+      sizeMax: 6,
     });
     for (const p of particles) {
       this.engine.spawn(p);
@@ -291,7 +302,7 @@ export class TerrainSystem extends System {
       speedMax: 10,
       colors: ['#8b7355', '#a0926c', '#6b5344', '#fff'],
       sizeMin: 5,
-      sizeMax: 10
+      sizeMax: 10,
     });
     for (const p of particles) {
       this.engine.spawn(p);
@@ -299,9 +310,9 @@ export class TerrainSystem extends System {
 
     this.engine.emit('player:death', {
       victimId: player.player.playerId,
-      killerId: -2,  // 滚石击杀
+      killerId: -2, // 滚石击杀
       x: player.transform.x,
-      y: player.transform.y
+      y: player.transform.y,
     });
 
     // 滚石继续滚动，不消失
@@ -314,7 +325,7 @@ export class TerrainSystem extends System {
       speedMax: 3,
       colors: ['#8b7355', '#a0926c'],
       sizeMin: 3,
-      sizeMax: 5
+      sizeMax: 5,
     });
     for (const p of particles) {
       this.engine.spawn(p);
@@ -371,7 +382,7 @@ export class TerrainSystem extends System {
       speedMax: 5,
       colors: ['#9c27b0', '#7b1fa2', '#4a148c', '#ce93d8'],
       sizeMin: 4,
-      sizeMax: 8
+      sizeMax: 8,
     });
     for (const p of particles) {
       this.engine.spawn(p);
@@ -379,9 +390,9 @@ export class TerrainSystem extends System {
 
     this.engine.emit('player:death', {
       victimId: player.player.playerId,
-      killerId: -3,  // 毒圈击杀
+      killerId: -3, // 毒圈击杀
       x: player.transform.x,
-      y: player.transform.y
+      y: player.transform.y,
     });
   }
 }

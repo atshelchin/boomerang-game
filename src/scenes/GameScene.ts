@@ -2,19 +2,32 @@
  * 游戏场景
  */
 
-import { Scene, InputSystem, CameraSystem } from 'you-engine';
-import type { GameEntity, PlayerData, WallData, BoomerangData, ParticleData, RingData } from '../entities/types';
-import { EntityTags } from '../entities/types';
-import type { ReplayFrame } from '../config/GameState';
-import { createPlayer, createWall, createPowerup, createCircleObstacle, createTriangleObstacle } from '../entities/factories';
+import { CameraSystem, InputSystem, Scene } from 'you-engine';
 import {
-  DESIGN_WIDTH,
   DESIGN_HEIGHT,
+  DESIGN_WIDTH,
+  GameSettings,
   MAP_LAYOUTS,
   POWERUP_CONFIG,
-  GameSettings
 } from '../config/GameConfig';
+import type { ReplayFrame } from '../config/GameState';
 import { GameState, Stats } from '../config/GameState';
+import {
+  createCircleObstacle,
+  createPlayer,
+  createPowerup,
+  createTriangleObstacle,
+  createWall,
+} from '../entities/factories';
+import type {
+  BoomerangData,
+  GameEntity,
+  ParticleData,
+  PlayerData,
+  RingData,
+  WallData,
+} from '../entities/types';
+import { EntityTags } from '../entities/types';
 
 declare global {
   interface Window {
@@ -136,29 +149,29 @@ export class GameScene extends Scene {
   private recordReplayFrame(): void {
     const players = this.engine.world.entities.filter(
       (e): e is GameEntity & { player: PlayerData } =>
-        !!(e.tags?.values.includes(EntityTags.PLAYER)) && e.player !== undefined
+        !!e.tags?.values.includes(EntityTags.PLAYER) && e.player !== undefined
     );
 
     const boomerangs = this.engine.world.entities.filter(
       (e): e is GameEntity & { boomerang: BoomerangData } =>
-        !!(e.tags?.values.includes(EntityTags.BOOMERANG)) && e.boomerang !== undefined
+        !!e.tags?.values.includes(EntityTags.BOOMERANG) && e.boomerang !== undefined
     );
 
     // 收集粒子效果
     const particles = this.engine.world.entities.filter(
       (e): e is GameEntity & { particle: ParticleData } =>
-        !!(e.tags?.values.includes(EntityTags.PARTICLE)) && e.particle !== undefined
+        !!e.tags?.values.includes(EntityTags.PARTICLE) && e.particle !== undefined
     );
 
     // 收集环形效果
     const rings = this.engine.world.entities.filter(
       (e): e is GameEntity & { ring: RingData } =>
-        !!(e.tags?.values.includes(EntityTags.RING)) && e.ring !== undefined
+        !!e.tags?.values.includes(EntityTags.RING) && e.ring !== undefined
     );
 
     const frame: ReplayFrame = {
       time: GameState.time,
-      players: players.map(p => ({
+      players: players.map((p) => ({
         playerId: p.player.playerId,
         x: p.transform?.x ?? 0,
         y: p.transform?.y ?? 0,
@@ -167,16 +180,16 @@ export class GameScene extends Scene {
         hasBoomerang: p.player.hasBoomerang,
         charging: p.player.charging,
         dashing: p.player.dashTimer > 0,
-        skinIndex: p.player.skinIndex
+        skinIndex: p.player.skinIndex,
       })),
-      boomerangs: boomerangs.map(b => ({
+      boomerangs: boomerangs.map((b) => ({
         ownerId: b.boomerang.ownerId,
         x: b.transform?.x ?? 0,
         y: b.transform?.y ?? 0,
         rotation: b.boomerang.rotation,
-        isBig: b.boomerang.isBig
+        isBig: b.boomerang.isBig,
       })),
-      particles: particles.map(p => ({
+      particles: particles.map((p) => ({
         x: p.transform?.x ?? 0,
         y: p.transform?.y ?? 0,
         vx: p.velocity?.x ?? 0,
@@ -184,16 +197,16 @@ export class GameScene extends Scene {
         size: p.particle.size,
         color: p.particle.color,
         life: p.particle.life,
-        maxLife: p.particle.maxLife
+        maxLife: p.particle.maxLife,
       })),
-      rings: rings.map(r => ({
+      rings: rings.map((r) => ({
         x: r.transform?.x ?? 0,
         y: r.transform?.y ?? 0,
         radius: r.ring.radius,
         maxRadius: r.ring.maxRadius,
         color: r.ring.color,
-        alpha: r.ring.alpha
-      }))
+        alpha: r.ring.alpha,
+      })),
     };
 
     GameState.recordReplayFrame(frame);
@@ -350,7 +363,12 @@ export class GameScene extends Scene {
 
     // 创建所有玩家
     for (let i = 0; i < playerCount; i++) {
-      const playerConfig = players[i] || { gamepadIndex: i, skinIndex: i, name: `P${i + 1}`, teamIndex: -1 };
+      const playerConfig = players[i] || {
+        gamepadIndex: i,
+        skinIndex: i,
+        name: `P${i + 1}`,
+        teamIndex: -1,
+      };
       const pos = spawnPositions[i];
       const player = createPlayer(i, pos.x, pos.y);
 
@@ -372,7 +390,9 @@ export class GameScene extends Scene {
 
     // 兼容旧的 PVE 模式
     if (GameSettings.gameMode === 'pve' || GameSettings.gameMode === 'tutorial') {
-      const playerEntities = this.engine.world.entities.filter(e => e.tags?.values?.includes(EntityTags.PLAYER));
+      const playerEntities = this.engine.world.entities.filter((e) =>
+        e.tags?.values?.includes(EntityTags.PLAYER)
+      );
       if (playerEntities.length >= 2) {
         const p2 = playerEntities[1];
         (p2.player as PlayerData).isAI = true;
@@ -431,11 +451,17 @@ export class GameScene extends Scene {
 
   private clearEntities(): void {
     const gameEntityTags = [
-      EntityTags.PLAYER, EntityTags.BOOMERANG, EntityTags.POWERUP, EntityTags.WALL,
-      EntityTags.PARTICLE, EntityTags.TRAIL, EntityTags.RING, EntityTags.FLOATING_TEXT
+      EntityTags.PLAYER,
+      EntityTags.BOOMERANG,
+      EntityTags.POWERUP,
+      EntityTags.WALL,
+      EntityTags.PARTICLE,
+      EntityTags.TRAIL,
+      EntityTags.RING,
+      EntityTags.FLOATING_TEXT,
     ];
 
-    const toRemove = this.engine.world.entities.filter(e => {
+    const toRemove = this.engine.world.entities.filter((e) => {
       if (!e.tags?.values) return false;
       for (const tag of gameEntityTags) {
         if (e.tags.values.includes(tag)) return true;
@@ -457,12 +483,7 @@ export class GameScene extends Scene {
 
     // 生成预定义的矩形墙体
     for (const w of layout) {
-      const wall = createWall(
-        W * w.bx + w.ox,
-        H * w.by + w.oy,
-        w.bw,
-        w.bh
-      );
+      const wall = createWall(W * w.bx + w.ox, H * w.by + w.oy, w.bw, w.bh);
       this.spawn(wall);
     }
 
@@ -496,7 +517,7 @@ export class GameScene extends Scene {
 
     const walls = this.engine.world.entities.filter(
       (e): e is GameEntity & { wall: WallData } =>
-        !!(e.tags?.values.includes(EntityTags.WALL)) && e.wall !== undefined
+        !!e.tags?.values.includes(EntityTags.WALL) && e.wall !== undefined
     );
 
     let x: number, y: number, valid: boolean;
@@ -511,8 +532,12 @@ export class GameScene extends Scene {
         const wx = wall.transform.x - wall.wall.width / 2;
         const wy = wall.transform.y - wall.wall.height / 2;
 
-        if (x > wx - padding && x < wx + wall.wall.width + padding &&
-            y > wy - padding && y < wy + wall.wall.height + padding) {
+        if (
+          x > wx - padding &&
+          x < wx + wall.wall.width + padding &&
+          y > wy - padding &&
+          y < wy + wall.wall.height + padding
+        ) {
           valid = false;
           break;
         }
@@ -555,7 +580,7 @@ export class GameScene extends Scene {
     if (finalScore) {
       if (GameSettings.playerCount > 2) {
         // 多人模式显示所有得分
-        const scores = GameState.playerScores.map(p => p.score).join(' : ');
+        const scores = GameState.playerScores.map((p) => p.score).join(' : ');
         finalScore.textContent = scores;
       } else {
         finalScore.textContent = `${GameState.scores[0]} : ${GameState.scores[1]}`;
@@ -580,7 +605,7 @@ export class GameScene extends Scene {
       [p1Stats.kills, p2Stats.kills],
       [p1Stats.throws, p2Stats.throws],
       [p1Stats.dashes, p2Stats.dashes],
-      [p1Stats.powerups, p2Stats.powerups]
+      [p1Stats.powerups, p2Stats.powerups],
     ];
 
     statRows.forEach((row, i) => {
@@ -642,17 +667,23 @@ export class GameScene extends Scene {
   private toggleFullscreen(): void {
     const fullscreenBtn = document.getElementById('fullscreenBtn');
     if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().then(() => {
-        if (fullscreenBtn) fullscreenBtn.textContent = '退出全屏';
-      }).catch(() => {
-        // Fullscreen request failed
-      });
+      document.documentElement
+        .requestFullscreen()
+        .then(() => {
+          if (fullscreenBtn) fullscreenBtn.textContent = '退出全屏';
+        })
+        .catch(() => {
+          // Fullscreen request failed
+        });
     } else {
-      document.exitFullscreen().then(() => {
-        if (fullscreenBtn) fullscreenBtn.textContent = '全屏模式';
-      }).catch(() => {
-        // Exit fullscreen failed
-      });
+      document
+        .exitFullscreen()
+        .then(() => {
+          if (fullscreenBtn) fullscreenBtn.textContent = '全屏模式';
+        })
+        .catch(() => {
+          // Exit fullscreen failed
+        });
     }
   }
 
@@ -681,7 +712,7 @@ export class GameScene extends Scene {
         link.click();
 
         window.showMessage?.('截图已保存');
-      } catch (e) {
+      } catch (_e) {
         window.showMessage?.('截图失败');
       }
 

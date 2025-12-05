@@ -2,17 +2,17 @@
  * 实体工厂函数
  */
 
-import { createTransform, createVelocity, createSprite, createCollider } from 'you-engine';
+import { createCollider, createSprite, createTransform, createVelocity } from 'you-engine';
+import {
+  BOOMERANG_CONFIG,
+  GameSettings,
+  PLAYER_CONFIG,
+  PLAYER_SKINS,
+  POWERUP_COLORS,
+  POWERUP_CONFIG,
+} from '../config/GameConfig';
 import type { GameEntity } from './types';
 import { EntityTags } from './types';
-import {
-  PLAYER_CONFIG,
-  BOOMERANG_CONFIG,
-  POWERUP_CONFIG,
-  POWERUP_COLORS,
-  PLAYER_SKINS,
-  GameSettings
-} from '../config/GameConfig';
 
 /**
  * 创建玩家实体
@@ -20,14 +20,18 @@ import {
 export function createPlayer(id: number, x: number, y: number): Partial<GameEntity> {
   // 获取皮肤：优先使用多人配置，否则使用旧配置
   const playerConfig = GameSettings.players?.[id];
-  const skinIndex = playerConfig?.skinIndex ?? (id === 0 ? GameSettings.p1Skin : GameSettings.p2Skin);
+  const skinIndex =
+    playerConfig?.skinIndex ?? (id === 0 ? GameSettings.p1Skin : GameSettings.p2Skin);
   const skin = PLAYER_SKINS[skinIndex % PLAYER_SKINS.length];
 
   // 根据玩家数量计算初始角度
   const playerCount = GameSettings.playerCount || 2;
-  const baseAngles = playerCount === 2 ? [0, Math.PI] :
-                     playerCount === 3 ? [0, Math.PI * 2 / 3, Math.PI * 4 / 3] :
-                     [Math.PI / 4, Math.PI * 3 / 4, Math.PI * 5 / 4, Math.PI * 7 / 4];
+  const baseAngles =
+    playerCount === 2
+      ? [0, Math.PI]
+      : playerCount === 3
+        ? [0, (Math.PI * 2) / 3, (Math.PI * 4) / 3]
+        : [Math.PI / 4, (Math.PI * 3) / 4, (Math.PI * 5) / 4, (Math.PI * 7) / 4];
 
   return {
     id: `player-${id}`,
@@ -36,7 +40,7 @@ export function createPlayer(id: number, x: number, y: number): Partial<GameEnti
     sprite: createSprite({
       width: PLAYER_CONFIG.radius * 2,
       height: PLAYER_CONFIG.radius * 2,
-      color: skin.color1
+      color: skin.color1,
     }),
     collider: createCollider('circle', { radius: PLAYER_CONFIG.radius }),
     tags: { values: [EntityTags.PLAYER] },
@@ -62,7 +66,7 @@ export function createPlayer(id: number, x: number, y: number): Partial<GameEnti
       frozenTimer: 0,
       burning: false,
       burnTimer: 0,
-    }
+    },
   };
 }
 
@@ -79,7 +83,8 @@ export function createBoomerang(
 ): Partial<GameEntity> {
   // 获取玩家配置，支持多人模式
   const playerConfig = GameSettings.players?.[ownerId];
-  const colorIndex = playerConfig?.colorIndex ?? playerConfig?.skinIndex ?? ownerId % PLAYER_SKINS.length;
+  const colorIndex =
+    playerConfig?.colorIndex ?? playerConfig?.skinIndex ?? ownerId % PLAYER_SKINS.length;
   const skin = PLAYER_SKINS[colorIndex];
   const radius = isBig ? BOOMERANG_CONFIG.bigRadius : BOOMERANG_CONFIG.radius;
 
@@ -89,7 +94,7 @@ export function createBoomerang(
     sprite: createSprite({
       width: radius * 2,
       height: radius * 2,
-      color: skin.color1
+      color: skin.color1,
     }),
     collider: createCollider('circle', { radius }),
     tags: { values: [EntityTags.BOOMERANG] },
@@ -109,7 +114,7 @@ export function createBoomerang(
       hasFire: false,
       canPenetrate: false,
       extendedRange: false,
-    }
+    },
   };
 }
 
@@ -122,32 +127,37 @@ export function createPowerup(x: number, y: number, type: string): Partial<GameE
     sprite: createSprite({
       width: POWERUP_CONFIG.radius * 2,
       height: POWERUP_CONFIG.radius * 2,
-      color: POWERUP_COLORS[type]
+      color: POWERUP_COLORS[type],
     }),
     collider: createCollider('circle', { radius: POWERUP_CONFIG.radius }),
     tags: { values: [EntityTags.POWERUP] },
     powerup: {
       type,
       bobOffset: Math.random() * Math.PI * 2,
-      lifetime: 0
-    }
+      lifetime: 0,
+    },
   };
 }
 
 /**
  * 创建矩形墙体实体
  */
-export function createWall(x: number, y: number, width: number, height: number): Partial<GameEntity> {
+export function createWall(
+  x: number,
+  y: number,
+  width: number,
+  height: number
+): Partial<GameEntity> {
   return {
     transform: createTransform(x + width / 2, y + height / 2),
     sprite: createSprite({
       width,
       height,
-      color: '#333'
+      color: '#333',
     }),
     collider: createCollider('rect', { width, height }),
     tags: { values: [EntityTags.WALL] },
-    wall: { width, height, shapeType: 'rect' }
+    wall: { width, height, shapeType: 'rect' },
   };
 }
 
@@ -160,11 +170,11 @@ export function createCircleObstacle(x: number, y: number, radius: number): Part
     sprite: createSprite({
       width: radius * 2,
       height: radius * 2,
-      color: '#444'
+      color: '#444',
     }),
     collider: createCollider('circle', { radius }),
     tags: { values: [EntityTags.WALL] },
-    wall: { width: radius * 2, height: radius * 2, shapeType: 'circle', radius }
+    wall: { width: radius * 2, height: radius * 2, shapeType: 'circle', radius },
   };
 }
 
@@ -173,11 +183,11 @@ export function createCircleObstacle(x: number, y: number, radius: number): Part
  */
 export function createTriangleObstacle(x: number, y: number, size: number): Partial<GameEntity> {
   // 等边三角形顶点
-  const h = size * Math.sqrt(3) / 2;
+  const h = (size * Math.sqrt(3)) / 2;
   const vertices = [
-    { x: 0, y: -h * 2 / 3 },
+    { x: 0, y: (-h * 2) / 3 },
     { x: -size / 2, y: h / 3 },
-    { x: size / 2, y: h / 3 }
+    { x: size / 2, y: h / 3 },
   ];
 
   return {
@@ -185,11 +195,11 @@ export function createTriangleObstacle(x: number, y: number, size: number): Part
     sprite: createSprite({
       width: size,
       height: h,
-      color: '#555'
+      color: '#555',
     }),
     collider: createCollider('rect', { width: size, height: h }), // 简单碰撞盒
     tags: { values: [EntityTags.WALL] },
-    wall: { width: size, height: h, shapeType: 'triangle', vertices }
+    wall: { width: size, height: h, shapeType: 'triangle', vertices },
   };
 }
 
@@ -202,7 +212,10 @@ export function createPolygonObstacle(
   vertices: Array<{ x: number; y: number }>
 ): Partial<GameEntity> {
   // 计算包围盒
-  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  let minX = Infinity,
+    maxX = -Infinity,
+    minY = Infinity,
+    maxY = -Infinity;
   for (const v of vertices) {
     minX = Math.min(minX, v.x);
     maxX = Math.max(maxX, v.x);
@@ -217,11 +230,11 @@ export function createPolygonObstacle(
     sprite: createSprite({
       width,
       height,
-      color: '#666'
+      color: '#666',
     }),
     collider: createCollider('rect', { width, height }),
     tags: { values: [EntityTags.WALL] },
-    wall: { width, height, shapeType: 'polygon', vertices }
+    wall: { width, height, shapeType: 'polygon', vertices },
   };
 }
 
@@ -250,8 +263,8 @@ export function createParticle(
       maxLife: life,
       size: config.size ?? 5,
       color: config.color ?? '#fff',
-      isDebris: config.isDebris ?? false
-    }
+      isDebris: config.isDebris ?? false,
+    },
   };
 }
 
@@ -268,7 +281,7 @@ export function createTrail(
   return {
     transform: createTransform(x, y),
     tags: { values: [EntityTags.TRAIL] },
-    trail: { alpha, radius, color }
+    trail: { alpha, radius, color },
   };
 }
 
@@ -288,8 +301,8 @@ export function createRing(
       radius: 20,
       maxRadius,
       color,
-      alpha: 1
-    }
+      alpha: 1,
+    },
   };
 }
 
@@ -309,49 +322,41 @@ export function createFloatingText(
     floatingText: {
       text,
       color,
-      life: 60
-    }
+      life: 60,
+    },
   };
 }
 
 /**
  * 创建火焰轨迹实体
  */
-export function createFireTrail(
-  x: number,
-  y: number,
-  ownerId: number
-): Partial<GameEntity> {
+export function createFireTrail(x: number, y: number, ownerId: number): Partial<GameEntity> {
   return {
     transform: createTransform(x, y),
     tags: { values: [EntityTags.FIRE_TRAIL] },
     collider: createCollider('circle', { radius: 15 }),
     fireTrail: {
-      life: 120,      // 2秒
+      life: 120, // 2秒
       maxLife: 120,
       ownerId,
       damage: true,
-    }
+    },
   };
 }
 
 /**
  * 创建冰冻轨迹实体
  */
-export function createIceTrail(
-  x: number,
-  y: number,
-  ownerId: number
-): Partial<GameEntity> {
+export function createIceTrail(x: number, y: number, ownerId: number): Partial<GameEntity> {
   return {
     transform: createTransform(x, y),
     tags: { values: [EntityTags.ICE_TRAIL] },
     collider: createCollider('circle', { radius: 18 }),
     iceTrail: {
-      life: 180,      // 3秒（比火焰更长）
+      life: 180, // 3秒（比火焰更长）
       maxLife: 180,
       ownerId,
-    }
+    },
   };
 }
 
@@ -375,19 +380,21 @@ export function spawnParticles(
   const particles: Partial<GameEntity>[] = [];
 
   for (let i = 0; i < count; i++) {
-    const angle = config.angle !== undefined
-      ? config.angle + (Math.random() - 0.5) * (config.spread ?? Math.PI)
-      : Math.random() * Math.PI * 2;
+    const angle =
+      config.angle !== undefined
+        ? config.angle + (Math.random() - 0.5) * (config.spread ?? Math.PI)
+        : Math.random() * Math.PI * 2;
     const speed = config.speedMin + Math.random() * (config.speedMax - config.speedMin);
     const size = config.sizeMin + Math.random() * (config.sizeMax - config.sizeMin);
     const color = config.colors[Math.floor(Math.random() * config.colors.length)];
 
-    particles.push(createParticle(
-      x, y,
-      Math.cos(angle) * speed,
-      Math.sin(angle) * speed,
-      { size, color, life: 25 + Math.random() * 20 }
-    ));
+    particles.push(
+      createParticle(x, y, Math.cos(angle) * speed, Math.sin(angle) * speed, {
+        size,
+        color,
+        life: 25 + Math.random() * 20,
+      })
+    );
   }
 
   return particles;
@@ -409,8 +416,8 @@ export function createIceTerrain(
       type: 'ice',
       width,
       height,
-      friction: 0.02  // 极低摩擦
-    }
+      friction: 0.02, // 极低摩擦
+    },
   };
 }
 
@@ -429,8 +436,8 @@ export function createWaterTerrain(
     terrain: {
       type: 'water',
       width,
-      height
-    }
+      height,
+    },
   };
 }
 
@@ -454,8 +461,8 @@ export function createPortal(
       radius: 35,
       color,
       cooldown: 0,
-      rotation: 0
-    }
+      rotation: 0,
+    },
   };
 }
 
@@ -479,9 +486,9 @@ export function createBoulderSpawner(
       speed: 8,
       radius: 40,
       active: false,
-      spawnTimer: interval / 2,  // 初始延迟
-      spawnInterval: interval
-    }
+      spawnTimer: interval / 2, // 初始延迟
+      spawnInterval: interval,
+    },
   };
 }
 
@@ -506,8 +513,8 @@ export function createRollingBoulder(
       radius,
       active: true,
       spawnTimer: 0,
-      spawnInterval: 0
-    }
+      spawnInterval: 0,
+    },
   };
 }
 
@@ -529,9 +536,9 @@ export function createPoisonZone(
       targetRadius,
       shrinkSpeed,
       damage: 1,
-      damageInterval: 30,  // 每0.5秒
+      damageInterval: 30, // 每0.5秒
       centerX,
-      centerY
-    }
+      centerY,
+    },
   };
 }

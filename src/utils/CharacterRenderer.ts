@@ -28,44 +28,49 @@ export class CharacterRenderer {
 
     switch (shape) {
       case 'circle':
-        this.drawCircle(ctx, bodyGrad, radius, angle);
+        CharacterRenderer.drawCircle(ctx, bodyGrad, radius, angle);
         break;
       case 'star':
-        this.drawStar(ctx, bodyGrad, radius, angle);
+        CharacterRenderer.drawStar(ctx, bodyGrad, radius, angle);
         break;
       case 'heart':
-        this.drawHeart(ctx, bodyGrad, radius, angle);
+        CharacterRenderer.drawHeart(ctx, bodyGrad, radius, angle);
         break;
       case 'cat':
-        this.drawCat(ctx, bodyGrad, radius, angle);
+        CharacterRenderer.drawCat(ctx, bodyGrad, radius, angle);
         break;
       case 'bunny':
-        this.drawBunny(ctx, bodyGrad, radius, angle);
+        CharacterRenderer.drawBunny(ctx, bodyGrad, radius, angle);
         break;
       case 'ghost':
-        this.drawGhost(ctx, bodyGrad, radius, angle);
+        CharacterRenderer.drawGhost(ctx, bodyGrad, radius, angle);
         break;
       case 'slime':
-        this.drawSlime(ctx, bodyGrad, radius, angle);
+        CharacterRenderer.drawSlime(ctx, bodyGrad, radius, angle);
         break;
       case 'flower':
-        this.drawFlower(ctx, bodyGrad, radius, angle);
+        CharacterRenderer.drawFlower(ctx, bodyGrad, radius, angle);
         break;
       case 'cloud':
-        this.drawCloud(ctx, bodyGrad, radius, angle);
+        CharacterRenderer.drawCloud(ctx, bodyGrad, radius, angle);
         break;
       case 'octopus':
-        this.drawOctopus(ctx, bodyGrad, radius, angle, time);
+        CharacterRenderer.drawOctopus(ctx, bodyGrad, radius, angle, time);
         break;
       default:
-        this.drawCircle(ctx, bodyGrad, radius, angle);
+        CharacterRenderer.drawCircle(ctx, bodyGrad, radius, angle);
     }
   }
 
   // =============== 各形状绘制方法 ===============
 
   /** 圆形角色（默认） */
-  private static drawCircle(ctx: CanvasRenderingContext2D, grad: CanvasGradient, r: number, angle: number): void {
+  private static drawCircle(
+    ctx: CanvasRenderingContext2D,
+    grad: CanvasGradient,
+    r: number,
+    angle: number
+  ): void {
     ctx.fillStyle = grad;
     ctx.beginPath();
     ctx.arc(0, 0, r, 0, Math.PI * 2);
@@ -77,11 +82,16 @@ export class CharacterRenderer {
     ctx.ellipse(-r * 0.28, -r * 0.36, r * 0.28, r * 0.18, -0.5, 0, Math.PI * 2);
     ctx.fill();
 
-    this.drawEyes(ctx, angle, r);
+    CharacterRenderer.drawEyes(ctx, angle, r);
   }
 
   /** 星星角色 */
-  private static drawStar(ctx: CanvasRenderingContext2D, grad: CanvasGradient, r: number, angle: number): void {
+  private static drawStar(
+    ctx: CanvasRenderingContext2D,
+    grad: CanvasGradient,
+    r: number,
+    angle: number
+  ): void {
     ctx.fillStyle = grad;
     ctx.beginPath();
     const spikes = 5;
@@ -102,11 +112,16 @@ export class CharacterRenderer {
     ctx.ellipse(-r * 0.18, -r * 0.28, r * 0.21, r * 0.14, -0.5, 0, Math.PI * 2);
     ctx.fill();
 
-    this.drawEyes(ctx, angle, r * 0.8);
+    CharacterRenderer.drawEyes(ctx, angle, r * 0.8);
   }
 
   /** 爱心角色 */
-  private static drawHeart(ctx: CanvasRenderingContext2D, grad: CanvasGradient, r: number, angle: number): void {
+  private static drawHeart(
+    ctx: CanvasRenderingContext2D,
+    grad: CanvasGradient,
+    r: number,
+    angle: number
+  ): void {
     ctx.fillStyle = grad;
     ctx.save();
     ctx.scale(r / 28, r / 28);
@@ -123,11 +138,16 @@ export class CharacterRenderer {
     ctx.ellipse(-r * 0.36, -r * 0.43, r * 0.21, r * 0.18, -0.3, 0, Math.PI * 2);
     ctx.fill();
 
-    this.drawEyes(ctx, angle, r * 0.75, -r * 0.18);
+    CharacterRenderer.drawEyes(ctx, angle, r * 0.75, -r * 0.18);
   }
 
   /** 猫咪角色 */
-  private static drawCat(ctx: CanvasRenderingContext2D, grad: CanvasGradient, r: number, angle: number): void {
+  private static drawCat(
+    ctx: CanvasRenderingContext2D,
+    grad: CanvasGradient,
+    r: number,
+    angle: number
+  ): void {
     // 耳朵
     ctx.fillStyle = grad;
     ctx.beginPath();
@@ -172,11 +192,16 @@ export class CharacterRenderer {
     ctx.fill();
 
     // 猫眼
-    this.drawCatEyes(ctx, angle, r);
+    CharacterRenderer.drawCatEyes(ctx, angle, r);
   }
 
   /** 兔子角色 */
-  private static drawBunny(ctx: CanvasRenderingContext2D, grad: CanvasGradient, r: number, angle: number): void {
+  private static drawBunny(
+    ctx: CanvasRenderingContext2D,
+    grad: CanvasGradient,
+    r: number,
+    angle: number
+  ): void {
     // 长耳朵
     ctx.fillStyle = grad;
     ctx.beginPath();
@@ -207,11 +232,16 @@ export class CharacterRenderer {
     ctx.ellipse(-r * 0.28, -r * 0.28, r * 0.28, r * 0.18, -0.5, 0, Math.PI * 2);
     ctx.fill();
 
-    this.drawEyes(ctx, angle, r);
+    CharacterRenderer.drawEyes(ctx, angle, r);
   }
 
   /** 幽灵角色 */
-  private static drawGhost(ctx: CanvasRenderingContext2D, grad: CanvasGradient, r: number, angle: number): void {
+  private static drawGhost(
+    ctx: CanvasRenderingContext2D,
+    grad: CanvasGradient,
+    r: number,
+    angle: number
+  ): void {
     ctx.fillStyle = grad;
     ctx.beginPath();
     // 头部
@@ -220,14 +250,11 @@ export class CharacterRenderer {
     const waveCount = 4;
     const waveHeight = r * 0.3;
     for (let i = 0; i <= waveCount; i++) {
-      const x = r - (2 * r / waveCount) * i;
+      const x = r - ((2 * r) / waveCount) * i;
       const y = r * 0.8 + (i % 2 === 0 ? 0 : waveHeight);
       if (i === 0) ctx.lineTo(r, r * 0.8);
-      else ctx.quadraticCurveTo(
-        x + r / waveCount,
-        i % 2 === 0 ? r * 0.8 + waveHeight : r * 0.8,
-        x, y
-      );
+      else
+        ctx.quadraticCurveTo(x + r / waveCount, i % 2 === 0 ? r * 0.8 + waveHeight : r * 0.8, x, y);
     }
     ctx.closePath();
     ctx.fill();
@@ -239,11 +266,16 @@ export class CharacterRenderer {
     ctx.fill();
 
     // 幽灵眼睛（空洞感）
-    this.drawGhostEyes(ctx, angle, r);
+    CharacterRenderer.drawGhostEyes(ctx, angle, r);
   }
 
   /** 史莱姆角色 */
-  private static drawSlime(ctx: CanvasRenderingContext2D, grad: CanvasGradient, r: number, angle: number): void {
+  private static drawSlime(
+    ctx: CanvasRenderingContext2D,
+    grad: CanvasGradient,
+    r: number,
+    angle: number
+  ): void {
     ctx.fillStyle = grad;
     ctx.beginPath();
     // 水滴形状
@@ -258,17 +290,22 @@ export class CharacterRenderer {
     ctx.ellipse(-r * 0.21, -r * 0.36, r * 0.36, r * 0.21, -0.3, 0, Math.PI * 2);
     ctx.fill();
 
-    this.drawEyes(ctx, angle, r * 0.9, r * 0.07);
+    CharacterRenderer.drawEyes(ctx, angle, r * 0.9, r * 0.07);
   }
 
   /** 花朵角色 */
-  private static drawFlower(ctx: CanvasRenderingContext2D, grad: CanvasGradient, r: number, angle: number): void {
+  private static drawFlower(
+    ctx: CanvasRenderingContext2D,
+    grad: CanvasGradient,
+    r: number,
+    angle: number
+  ): void {
     // 花瓣
     ctx.fillStyle = grad;
     const petalCount = 6;
     for (let i = 0; i < petalCount; i++) {
       ctx.save();
-      ctx.rotate((Math.PI * 2 / petalCount) * i);
+      ctx.rotate(((Math.PI * 2) / petalCount) * i);
       ctx.beginPath();
       ctx.ellipse(0, -r * 0.7, r * 0.45, r * 0.6, 0, 0, Math.PI * 2);
       ctx.fill();
@@ -290,11 +327,16 @@ export class CharacterRenderer {
     ctx.ellipse(-r * 0.18, -r * 0.21, r * 0.21, r * 0.14, -0.5, 0, Math.PI * 2);
     ctx.fill();
 
-    this.drawEyes(ctx, angle, r * 0.65);
+    CharacterRenderer.drawEyes(ctx, angle, r * 0.65);
   }
 
   /** 云朵角色 */
-  private static drawCloud(ctx: CanvasRenderingContext2D, grad: CanvasGradient, r: number, angle: number): void {
+  private static drawCloud(
+    ctx: CanvasRenderingContext2D,
+    grad: CanvasGradient,
+    r: number,
+    angle: number
+  ): void {
     ctx.fillStyle = grad;
     // 主体云朵形状 - 多个圆组成
     ctx.beginPath();
@@ -319,11 +361,17 @@ export class CharacterRenderer {
     ctx.ellipse(-r * 0.28, -r * 0.43, r * 0.36, r * 0.21, -0.3, 0, Math.PI * 2);
     ctx.fill();
 
-    this.drawEyes(ctx, angle, r * 0.8);
+    CharacterRenderer.drawEyes(ctx, angle, r * 0.8);
   }
 
   /** 章鱼角色 */
-  private static drawOctopus(ctx: CanvasRenderingContext2D, grad: CanvasGradient, r: number, angle: number, time: number): void {
+  private static drawOctopus(
+    ctx: CanvasRenderingContext2D,
+    grad: CanvasGradient,
+    r: number,
+    angle: number,
+    time: number
+  ): void {
     // 触手
     ctx.fillStyle = grad;
     const tentacleCount = 6;
@@ -350,13 +398,18 @@ export class CharacterRenderer {
     ctx.fill();
 
     // 章鱼大眼睛
-    this.drawOctopusEyes(ctx, angle, r);
+    CharacterRenderer.drawOctopusEyes(ctx, angle, r);
   }
 
   // =============== 眼睛绘制方法 ===============
 
   /** 默认眼睛 */
-  private static drawEyes(ctx: CanvasRenderingContext2D, angle: number, r: number, offsetY = 0): void {
+  private static drawEyes(
+    ctx: CanvasRenderingContext2D,
+    angle: number,
+    r: number,
+    offsetY = 0
+  ): void {
     const scale = r / 28;
     ctx.save();
     ctx.rotate(angle);

@@ -3,18 +3,14 @@
  * 步骤式教学，AI会移动，玩家需要完成每个操作才能进入下一步
  */
 
-import { Scene, InputSystem, CameraSystem } from 'you-engine';
+import { CameraSystem, InputSystem, Scene } from 'you-engine';
+import { DESIGN_HEIGHT, DESIGN_WIDTH, GameSettings } from '../config/GameConfig';
+import { GameState } from '../config/GameState';
+import { i18n } from '../config/i18n';
+import { TutorialState, type TutorialStepType } from '../config/TutorialState';
+import { createPlayer, createPowerup, createWall } from '../entities/factories';
 import type { GameEntity, PlayerData } from '../entities/types';
 import { EntityTags } from '../entities/types';
-import { createPlayer, createWall, createPowerup } from '../entities/factories';
-import {
-  DESIGN_WIDTH,
-  DESIGN_HEIGHT,
-  GameSettings
-} from '../config/GameConfig';
-import { GameState } from '../config/GameState';
-import { TutorialState, TutorialStepType } from '../config/TutorialState';
-import { i18n } from '../config/i18n';
 
 declare global {
   interface Window {
@@ -136,11 +132,17 @@ export class TutorialScene extends Scene {
 
   private clearEntities(): void {
     const gameEntityTags = [
-      EntityTags.PLAYER, EntityTags.BOOMERANG, EntityTags.POWERUP, EntityTags.WALL,
-      EntityTags.PARTICLE, EntityTags.TRAIL, EntityTags.RING, EntityTags.FLOATING_TEXT
+      EntityTags.PLAYER,
+      EntityTags.BOOMERANG,
+      EntityTags.POWERUP,
+      EntityTags.WALL,
+      EntityTags.PARTICLE,
+      EntityTags.TRAIL,
+      EntityTags.RING,
+      EntityTags.FLOATING_TEXT,
     ];
 
-    const toRemove = this.engine.world.entities.filter(e => {
+    const toRemove = this.engine.world.entities.filter((e) => {
       if (!e.tags?.values) return false;
       for (const tag of gameEntityTags) {
         if (e.tags.values.includes(tag)) return true;
@@ -166,7 +168,7 @@ export class TutorialScene extends Scene {
   private getPlayer(): (GameEntity & { player: PlayerData }) | undefined {
     return this.engine.world.entities.find(
       (e): e is GameEntity & { player: PlayerData } =>
-        !!(e.tags?.values.includes(EntityTags.PLAYER)) &&
+        !!e.tags?.values.includes(EntityTags.PLAYER) &&
         e.player !== undefined &&
         (e.player as PlayerData).playerId === 0
     );
@@ -175,7 +177,7 @@ export class TutorialScene extends Scene {
   private getAI(): (GameEntity & { player: PlayerData }) | undefined {
     return this.engine.world.entities.find(
       (e): e is GameEntity & { player: PlayerData } =>
-        !!(e.tags?.values.includes(EntityTags.PLAYER)) &&
+        !!e.tags?.values.includes(EntityTags.PLAYER) &&
         e.player !== undefined &&
         (e.player as PlayerData).playerId === 1
     );
@@ -285,7 +287,7 @@ export class TutorialScene extends Scene {
       case 'powerup_magnet': {
         // 检测拾取并使用道具
         const targetType = stepType.replace('powerup_', '');
-        const hasPowerup = player.player.powerups.some(p => p.type === targetType);
+        const hasPowerup = player.player.powerups.some((p) => p.type === targetType);
 
         if (hasPowerup && !TutorialState.powerupCollected) {
           TutorialState.recordPowerupCollect();
@@ -324,19 +326,19 @@ export class TutorialScene extends Scene {
     const t = i18n.t.tutorial;
 
     const hints: Record<TutorialStepType, { title: string; desc: string }> = {
-      'intro': { title: t.intro, desc: t.introDesc },
-      'move': { title: t.move, desc: t.moveDesc },
-      'throw': { title: t.throw, desc: t.throwDesc },
-      'catch': { title: t.catch, desc: t.catchDesc },
-      'charge': { title: t.charge, desc: t.chargeDesc },
-      'dash': { title: t.dash, desc: t.dashDesc },
-      'powerup_triple': { title: t.powerupTriple, desc: t.powerupTripleDesc },
-      'powerup_big': { title: t.powerupBig, desc: t.powerupBigDesc },
-      'powerup_speed': { title: t.powerupSpeed, desc: t.powerupSpeedDesc },
-      'powerup_shield': { title: t.powerupShield, desc: t.powerupShieldDesc },
-      'powerup_magnet': { title: t.powerupMagnet, desc: t.powerupMagnetDesc },
-      'kill': { title: t.kill, desc: t.killDesc },
-      'complete': { title: t.complete, desc: t.completeDesc },
+      intro: { title: t.intro, desc: t.introDesc },
+      move: { title: t.move, desc: t.moveDesc },
+      throw: { title: t.throw, desc: t.throwDesc },
+      catch: { title: t.catch, desc: t.catchDesc },
+      charge: { title: t.charge, desc: t.chargeDesc },
+      dash: { title: t.dash, desc: t.dashDesc },
+      powerup_triple: { title: t.powerupTriple, desc: t.powerupTripleDesc },
+      powerup_big: { title: t.powerupBig, desc: t.powerupBigDesc },
+      powerup_speed: { title: t.powerupSpeed, desc: t.powerupSpeedDesc },
+      powerup_shield: { title: t.powerupShield, desc: t.powerupShieldDesc },
+      powerup_magnet: { title: t.powerupMagnet, desc: t.powerupMagnetDesc },
+      kill: { title: t.kill, desc: t.killDesc },
+      complete: { title: t.complete, desc: t.completeDesc },
     };
 
     const hint = hints[stepType];
@@ -403,19 +405,18 @@ export class TutorialScene extends Scene {
       if (!step.aiAggressive) {
         // AI 只移动不攻击
         ai.player.hasBoomerang = false;
-      } else {
-        // AI 正常攻击
-        ai.player.hasBoomerang = ai.player.hasBoomerang;
       }
     }
   }
 
   private anyButtonPressed(): boolean {
     // 检测任意键/按钮
-    return this.input.isPressed('action') ||
-           this.input.isPressed('dash') ||
-           this.input.isButtonPressed(0, 0) ||
-           this.input.isButtonPressed(1, 0);
+    return (
+      this.input.isPressed('action') ||
+      this.input.isPressed('dash') ||
+      this.input.isButtonPressed(0, 0) ||
+      this.input.isButtonPressed(1, 0)
+    );
   }
 
   private advanceToNextStep(): void {
@@ -431,16 +432,16 @@ export class TutorialScene extends Scene {
     this.currentPowerupType = null;
 
     // 清理场上的道具
-    const powerups = this.engine.world.entities.filter(
-      e => e.tags?.values.includes(EntityTags.POWERUP)
+    const powerups = this.engine.world.entities.filter((e) =>
+      e.tags?.values.includes(EntityTags.POWERUP)
     );
     for (const p of powerups) {
       this.engine.despawn(p);
     }
 
     // 清理回旋镖
-    const boomerangs = this.engine.world.entities.filter(
-      e => e.tags?.values.includes(EntityTags.BOOMERANG)
+    const boomerangs = this.engine.world.entities.filter((e) =>
+      e.tags?.values.includes(EntityTags.BOOMERANG)
     );
     for (const b of boomerangs) {
       this.engine.despawn(b);
@@ -461,7 +462,7 @@ export class TutorialScene extends Scene {
   }
 
   private completeTutorial(): void {
-    window.showMessage(i18n.t.tutorial.complete + '\n' + i18n.t.tutorial.completeDesc, 3000);
+    window.showMessage(`${i18n.t.tutorial.complete}\n${i18n.t.tutorial.completeDesc}`, 3000);
     window.playSound('win');
 
     // 2秒后返回主菜单

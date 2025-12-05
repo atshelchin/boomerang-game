@@ -3,11 +3,11 @@
  * 自动跟随多玩家，保持所有玩家在视野内
  */
 
-import { System, CameraSystem } from 'you-engine';
+import { CameraSystem, System } from 'you-engine';
+import { DESIGN_HEIGHT, DESIGN_WIDTH } from '../config/GameConfig';
+import { GameState } from '../config/GameState';
 import type { GameEntity, PlayerData } from '../entities/types';
 import { EntityTags } from '../entities/types';
-import { DESIGN_WIDTH, DESIGN_HEIGHT } from '../config/GameConfig';
-import { GameState } from '../config/GameState';
 
 // 摄像机配置
 export const CAMERA_CONFIG = {
@@ -20,8 +20,8 @@ export const CAMERA_CONFIG = {
   playerPadding: 250,
 
   // 平滑参数
-  positionLerp: 0.04,  // 位置平滑系数（更慢更稳定）
-  zoomLerp: 0.03,       // 缩放平滑系数（更慢更稳定）
+  positionLerp: 0.04, // 位置平滑系数（更慢更稳定）
+  zoomLerp: 0.03, // 缩放平滑系数（更慢更稳定）
 
   // 击杀时的效果 - 缩小显示全场
   killZoom: 0.5,
@@ -29,7 +29,7 @@ export const CAMERA_CONFIG = {
 
   // 震动效果（减弱）
   shakeDecay: 0.85,
-  shakeMultiplier: 0.3,  // 震动幅度缩减
+  shakeMultiplier: 0.3, // 震动幅度缩减
 };
 
 export class DynamicCameraSystem extends System {
@@ -80,15 +80,24 @@ export class DynamicCameraSystem extends System {
     this.currentZoom += (this.targetZoom - this.currentZoom) * CAMERA_CONFIG.zoomLerp;
 
     // 限制缩放范围
-    this.currentZoom = Math.max(CAMERA_CONFIG.minZoom, Math.min(CAMERA_CONFIG.maxZoom, this.currentZoom));
+    this.currentZoom = Math.max(
+      CAMERA_CONFIG.minZoom,
+      Math.min(CAMERA_CONFIG.maxZoom, this.currentZoom)
+    );
 
     // 限制摄像机位置（不要超出地图边界太多）
-    const halfW = (DESIGN_WIDTH / 2) / this.currentZoom;
-    const halfH = (DESIGN_HEIGHT / 2) / this.currentZoom;
+    const halfW = DESIGN_WIDTH / 2 / this.currentZoom;
+    const halfH = DESIGN_HEIGHT / 2 / this.currentZoom;
     const margin = 100;
 
-    this.currentX = Math.max(halfW - margin, Math.min(DESIGN_WIDTH - halfW + margin, this.currentX));
-    this.currentY = Math.max(halfH - margin, Math.min(DESIGN_HEIGHT - halfH + margin, this.currentY));
+    this.currentX = Math.max(
+      halfW - margin,
+      Math.min(DESIGN_WIDTH - halfW + margin, this.currentX)
+    );
+    this.currentY = Math.max(
+      halfH - margin,
+      Math.min(DESIGN_HEIGHT - halfH + margin, this.currentY)
+    );
 
     // 应用震动效果（减弱）
     const shakeX = GameState.shake.x * CAMERA_CONFIG.shakeMultiplier;
@@ -107,7 +116,7 @@ export class DynamicCameraSystem extends System {
   private getAlivePlayers(): Array<GameEntity & { player: PlayerData }> {
     return this.engine.world.entities.filter(
       (e): e is GameEntity & { player: PlayerData } =>
-        !!(e.tags?.values.includes(EntityTags.PLAYER)) &&
+        !!e.tags?.values.includes(EntityTags.PLAYER) &&
         e.player !== undefined &&
         (e.player as PlayerData).alive
     );
@@ -118,9 +127,12 @@ export class DynamicCameraSystem extends System {
     if (players.length === 0) return;
 
     // 计算玩家包围盒
-    let minX = Infinity, maxX = -Infinity;
-    let minY = Infinity, maxY = -Infinity;
-    let sumX = 0, sumY = 0;
+    let minX = Infinity,
+      maxX = -Infinity;
+    let minY = Infinity,
+      maxY = -Infinity;
+    let sumX = 0,
+      sumY = 0;
 
     for (const player of players) {
       if (!player.transform) continue;
@@ -170,14 +182,16 @@ export class DynamicCameraSystem extends System {
     if (progress > 0.6) {
       // 前40%：快速缩小到显示全场
       const t = (1 - progress) / 0.4;
-      this.targetZoom = CAMERA_CONFIG.defaultZoom + (CAMERA_CONFIG.killZoom - CAMERA_CONFIG.defaultZoom) * t;
+      this.targetZoom =
+        CAMERA_CONFIG.defaultZoom + (CAMERA_CONFIG.killZoom - CAMERA_CONFIG.defaultZoom) * t;
     } else if (progress > 0.2) {
       // 中间40%：保持缩小状态
       this.targetZoom = CAMERA_CONFIG.killZoom;
     } else {
       // 后20%：缓慢恢复
       const t = progress / 0.2;
-      this.targetZoom = CAMERA_CONFIG.defaultZoom + (CAMERA_CONFIG.killZoom - CAMERA_CONFIG.defaultZoom) * t;
+      this.targetZoom =
+        CAMERA_CONFIG.defaultZoom + (CAMERA_CONFIG.killZoom - CAMERA_CONFIG.defaultZoom) * t;
     }
   }
 

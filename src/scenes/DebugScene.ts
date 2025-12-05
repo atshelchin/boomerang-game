@@ -3,26 +3,26 @@
  * 用于测试所有道具和地形
  */
 
-import { Scene, InputSystem, CameraSystem } from 'you-engine';
-import type { GameEntity, PlayerData } from '../entities/types';
-import { EntityTags } from '../entities/types';
+import { CameraSystem, InputSystem, Scene } from 'you-engine';
 import {
-  createPlayer,
-  createWall,
-  createPowerup,
-  createIceTerrain,
-  createWaterTerrain,
-  createPortal,
-  createBoulderSpawner
-} from '../entities/factories';
-import {
-  DESIGN_WIDTH,
   DESIGN_HEIGHT,
-  POWERUP_CONFIG,
+  DESIGN_WIDTH,
+  GameSettings,
   MAP_LAYOUTS,
-  GameSettings
+  POWERUP_CONFIG,
 } from '../config/GameConfig';
 import { GameState } from '../config/GameState';
+import {
+  createBoulderSpawner,
+  createIceTerrain,
+  createPlayer,
+  createPortal,
+  createPowerup,
+  createWall,
+  createWaterTerrain,
+} from '../entities/factories';
+import type { GameEntity, PlayerData } from '../entities/types';
+import { EntityTags } from '../entities/types';
 
 declare global {
   interface Window {
@@ -52,7 +52,7 @@ export class DebugScene extends Scene {
 
     // 配置摄像机
     this.camera.setPosition(DESIGN_WIDTH / 2, DESIGN_HEIGHT / 2);
-    this.camera.zoom = 0.6;  // 缩小以看到全图
+    this.camera.zoom = 0.6; // 缩小以看到全图
 
     // 初始化状态
     GameState.state = 'fight';
@@ -81,7 +81,7 @@ export class DebugScene extends Scene {
 
     // 创建单个玩家
     const player = createPlayer(0, DESIGN_WIDTH / 2, DESIGN_HEIGHT / 2);
-    player.player!.gamepadIndex = -99;  // 键盘控制
+    player.player!.gamepadIndex = -99; // 键盘控制
     this.engine.spawn(player);
 
     // 生成当前地图
@@ -120,8 +120,8 @@ export class DebugScene extends Scene {
 
   private spawnCurrentMap(): void {
     // 清除旧墙体
-    const walls = this.engine.world.entities.filter(
-      e => e.tags?.values.includes(EntityTags.WALL)
+    const walls = this.engine.world.entities.filter((e) =>
+      e.tags?.values.includes(EntityTags.WALL)
     );
     for (const wall of walls) {
       this.engine.despawn(wall);
@@ -139,8 +139,8 @@ export class DebugScene extends Scene {
 
   private spawnPowerupsDisplay(): void {
     // 清除旧道具
-    const powerups = this.engine.world.entities.filter(
-      e => e.tags?.values.includes(EntityTags.POWERUP)
+    const powerups = this.engine.world.entities.filter((e) =>
+      e.tags?.values.includes(EntityTags.POWERUP)
     );
     for (const p of powerups) {
       this.engine.despawn(p);
@@ -187,7 +187,8 @@ export class DebugScene extends Scene {
     // 左右切换地图
     if (Math.abs(moveX) > 0.5) {
       const delta = moveX > 0 ? 1 : -1;
-      this.currentMapIndex = (this.currentMapIndex + delta + MAP_LAYOUTS.length) % MAP_LAYOUTS.length;
+      this.currentMapIndex =
+        (this.currentMapIndex + delta + MAP_LAYOUTS.length) % MAP_LAYOUTS.length;
       this.spawnCurrentMap();
       window.showMessage?.(`地图 ${this.currentMapIndex + 1}/${MAP_LAYOUTS.length}`, 1000);
       this.menuCooldown = 15;
@@ -202,7 +203,7 @@ export class DebugScene extends Scene {
       // 给玩家添加道具效果
       const players = this.engine.world.entities.filter(
         (e): e is GameEntity & { player: PlayerData } =>
-          !!(e.tags?.values.includes(EntityTags.PLAYER)) && e.player !== undefined
+          !!e.tags?.values.includes(EntityTags.PLAYER) && e.player !== undefined
       );
 
       if (players.length > 0) {
@@ -228,17 +229,13 @@ export class DebugScene extends Scene {
     if (this.input.isReleased('action')) {
       const players = this.engine.world.entities.filter(
         (e): e is GameEntity & { player: PlayerData } =>
-          !!(e.tags?.values.includes(EntityTags.PLAYER)) && e.player !== undefined
+          !!e.tags?.values.includes(EntityTags.PLAYER) && e.player !== undefined
       );
 
       if (players.length > 0 && players[0].transform) {
         const types = POWERUP_CONFIG.types;
         const type = types[this.powerupIndex];
-        const powerup = createPowerup(
-          players[0].transform.x,
-          players[0].transform.y - 50,
-          type
-        );
+        const powerup = createPowerup(players[0].transform.x, players[0].transform.y - 50, type);
         this.engine.spawn(powerup);
         window.showMessage?.(`生成道具: ${type}`, 500);
       }

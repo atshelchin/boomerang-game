@@ -17,7 +17,7 @@ export const PLAYER_CONFIG = {
   dashCooldown: 12,
   catchCooldown: 15,
   maxCharge: 30,
-  chargeSpeedMultiplier: 0.5
+  chargeSpeedMultiplier: 0.5,
 };
 
 // 回旋镖配置
@@ -33,7 +33,7 @@ export const BOOMERANG_CONFIG = {
   bigMaxBounces: 7,
   maxLifetime: 300,
   slowdownRate: 0.985,
-  turnRate: 0.15
+  turnRate: 0.15,
 };
 
 // 道具配置
@@ -41,12 +41,22 @@ export const POWERUP_CONFIG = {
   radius: 20,
   duration: 600, // 10秒
   spawnDelay: 180, // 3秒后开始出道具
-  types: ['triple', 'big', 'speed', 'shield', 'magnet', 'freeze', 'fire', 'penetrate', 'range'] as const,
+  types: [
+    'triple',
+    'big',
+    'speed',
+    'shield',
+    'magnet',
+    'freeze',
+    'fire',
+    'penetrate',
+    'range',
+  ] as const,
   // 状态效果持续时间
   freezeDuration: 120, // 冰冻持续2秒
-  burnDuration: 180,   // 燃烧持续3秒
+  burnDuration: 180, // 燃烧持续3秒
   burnDamageInterval: 60, // 每1秒造成燃烧伤害
-  fireTrailLife: 120   // 火焰轨迹持续2秒
+  fireTrailLife: 120, // 火焰轨迹持续2秒
 };
 
 // 道具颜色
@@ -56,10 +66,10 @@ export const POWERUP_COLORS: Record<string, string> = {
   speed: '#0ff',
   shield: '#0f0',
   magnet: '#f80',
-  freeze: '#88f',    // 冰冻 - 蓝紫色
-  fire: '#f44',      // 火焰 - 红色
+  freeze: '#88f', // 冰冻 - 蓝紫色
+  fire: '#f44', // 火焰 - 红色
   penetrate: '#fff', // 穿透 - 白色
-  range: '#8f8'      // 延长射程 - 浅绿色
+  range: '#8f8', // 延长射程 - 浅绿色
 };
 
 // 道具名称
@@ -72,21 +82,21 @@ export const POWERUP_NAMES: Record<string, string> = {
   freeze: '冰冻',
   fire: '火焰',
   penetrate: '穿透',
-  range: '远程'
+  range: '远程',
 };
 
 // 角色形状类型
 export type CharacterShape =
-  | 'circle'      // 圆形
-  | 'star'        // 星星
-  | 'heart'       // 爱心
-  | 'cat'         // 猫咪
-  | 'bunny'       // 兔子
-  | 'ghost'       // 幽灵
-  | 'slime'       // 史莱姆
-  | 'flower'      // 花朵
-  | 'cloud'       // 云朵
-  | 'octopus';    // 章鱼
+  | 'circle' // 圆形
+  | 'star' // 星星
+  | 'heart' // 爱心
+  | 'cat' // 猫咪
+  | 'bunny' // 兔子
+  | 'ghost' // 幽灵
+  | 'slime' // 史莱姆
+  | 'flower' // 花朵
+  | 'cloud' // 云朵
+  | 'octopus'; // 章鱼
 
 // 角色颜色（可独立选择）
 export const CHARACTER_COLORS: Array<{
@@ -103,7 +113,7 @@ export const CHARACTER_COLORS: Array<{
   { name: '蓝', color1: '#3b82f6', color2: '#1d4ed8' },
   { name: '黄', color1: '#eab308', color2: '#a16207' },
   { name: '玫红', color1: '#f472b6', color2: '#db2777' },
-  { name: '翠绿', color1: '#34d399', color2: '#059669' }
+  { name: '翠绿', color1: '#34d399', color2: '#059669' },
 ];
 
 // 角色形状（可独立选择）
@@ -120,7 +130,7 @@ export const CHARACTER_SHAPES: Array<{
   { id: 'slime', name: '史莱姆' },
   { id: 'flower', name: '花朵' },
   { id: 'cloud', name: '云朵' },
-  { id: 'octopus', name: '章鱼' }
+  { id: 'octopus', name: '章鱼' },
 ];
 
 // 玩家皮肤（兼容旧代码，预设组合）
@@ -139,7 +149,7 @@ export const PLAYER_SKINS: Array<{
   { name: '蓝灵', color1: '#3b82f6', color2: '#1d4ed8', shape: 'ghost' },
   { name: '黄云', color1: '#eab308', color2: '#a16207', shape: 'cloud' },
   { name: '粉章', color1: '#f472b6', color2: '#db2777', shape: 'octopus' },
-  { name: '青史', color1: '#34d399', color2: '#059669', shape: 'slime' }
+  { name: '青史', color1: '#34d399', color2: '#059669', shape: 'slime' },
 ];
 
 // AI难度名称
@@ -155,12 +165,12 @@ export const TEAM_COLORS = [
 
 // 玩家配置接口
 export interface PlayerConfig {
-  gamepadIndex: number;  // 手柄索引，-99表示键盘，-2表示CPU
-  skinIndex: number;     // 皮肤索引（兼容旧代码）
-  colorIndex: number;    // 颜色索引
-  shapeIndex: number;    // 形状索引
-  name: string;          // 玩家名称
-  teamIndex: number;     // 队伍索引，-1表示Solo
+  gamepadIndex: number; // 手柄索引，-99表示键盘，-2表示CPU
+  skinIndex: number; // 皮肤索引（兼容旧代码）
+  colorIndex: number; // 颜色索引
+  shapeIndex: number; // 形状索引
+  name: string; // 玩家名称
+  teamIndex: number; // 队伍索引，-1表示Solo
 }
 
 // 游戏设置（可变状态）
@@ -175,7 +185,7 @@ export const GameSettings: {
   playerCount: number;
   players: PlayerConfig[];
 } = {
-  winScore: 11,  // 固定11回合胜利
+  winScore: 11, // 固定11回合胜利
   aiDifficulty: 1,
   soundEnabled: true,
   vibrationEnabled: true,
@@ -184,7 +194,7 @@ export const GameSettings: {
   p2Skin: 1,
   // 多玩家支持
   playerCount: 2,
-  players: []
+  players: [],
 };
 
 // 地图布局（障碍物尺寸适配大地图）
@@ -192,52 +202,52 @@ export const MAP_LAYOUTS = [
   // 中心十字
   [
     { bx: 0.5, by: 0.5, bw: 380, bh: 50, ox: -190, oy: -25 },
-    { bx: 0.5, by: 0.5, bw: 50, bh: 300, ox: -25, oy: -150 }
+    { bx: 0.5, by: 0.5, bw: 50, bh: 300, ox: -25, oy: -150 },
   ],
   // 四角方块
   [
     { bx: 0.16, by: 0.22, bw: 125, bh: 125, ox: 0, oy: 0 },
     { bx: 0.84, by: 0.22, bw: 125, bh: 125, ox: -125, oy: 0 },
     { bx: 0.16, by: 0.78, bw: 125, bh: 125, ox: 0, oy: -125 },
-    { bx: 0.84, by: 0.78, bw: 125, bh: 125, ox: -125, oy: -125 }
+    { bx: 0.84, by: 0.78, bw: 125, bh: 125, ox: -125, oy: -125 },
   ],
   // 三条横杠
   [
     { bx: 0.15, by: 0.33, bw: 320, bh: 45, ox: 0, oy: 0 },
     { bx: 0.5, by: 0.5, bw: 320, bh: 45, ox: -160, oy: 0 },
-    { bx: 0.85, by: 0.67, bw: 320, bh: 45, ox: -320, oy: 0 }
+    { bx: 0.85, by: 0.67, bw: 320, bh: 45, ox: -320, oy: 0 },
   ],
   // 回字形
   [
     { bx: 0.5, by: 0.3, bw: 440, bh: 40, ox: -220, oy: 0 },
     { bx: 0.5, by: 0.7, bw: 440, bh: 40, ox: -220, oy: 0 },
     { bx: 0.3, by: 0.5, bw: 40, bh: 260, ox: 0, oy: -130 },
-    { bx: 0.7, by: 0.5, bw: 40, bh: 260, ox: 0, oy: -130 }
+    { bx: 0.7, by: 0.5, bw: 40, bh: 260, ox: 0, oy: -130 },
   ],
   // 斜对角
   [
     { bx: 0.25, by: 0.3, bw: 230, bh: 45, ox: -115, oy: 0 },
     { bx: 0.75, by: 0.7, bw: 230, bh: 45, ox: -115, oy: 0 },
-    { bx: 0.5, by: 0.5, bw: 100, bh: 100, ox: -50, oy: -50 }
+    { bx: 0.5, by: 0.5, bw: 100, bh: 100, ox: -50, oy: -50 },
   ],
   // 迷宫
   [
     { bx: 0.35, by: 0.25, bw: 40, bh: 260, ox: 0, oy: 0 },
     { bx: 0.65, by: 0.75, bw: 40, bh: 260, ox: 0, oy: -260 },
-    { bx: 0.5, by: 0.5, bw: 260, bh: 40, ox: -130, oy: -20 }
+    { bx: 0.5, by: 0.5, bw: 260, bh: 40, ox: -130, oy: -20 },
   ],
   // 两堵墙
   [
     { bx: 0.33, by: 0.5, bw: 50, bh: 380, ox: -25, oy: -190 },
-    { bx: 0.67, by: 0.5, bw: 50, bh: 380, ox: -25, oy: -190 }
+    { bx: 0.67, by: 0.5, bw: 50, bh: 380, ox: -25, oy: -190 },
   ],
   // 蜂窝
   [
     { bx: 0.5, by: 0.35, bw: 150, bh: 65, ox: -75, oy: -32 },
     { bx: 0.5, by: 0.65, bw: 150, bh: 65, ox: -75, oy: -32 },
     { bx: 0.3, by: 0.5, bw: 100, bh: 100, ox: -50, oy: -50 },
-    { bx: 0.7, by: 0.5, bw: 100, bh: 100, ox: -50, oy: -50 }
-  ]
+    { bx: 0.7, by: 0.5, bw: 100, bh: 100, ox: -50, oy: -50 },
+  ],
 ];
 
 // 碰撞层
@@ -245,5 +255,5 @@ export const COLLISION_LAYERS = {
   PLAYER: 1,
   BOOMERANG: 2,
   WALL: 4,
-  POWERUP: 8
+  POWERUP: 8,
 };

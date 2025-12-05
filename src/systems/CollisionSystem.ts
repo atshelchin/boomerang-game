@@ -4,14 +4,26 @@
  * 使用 Matter.js 进行精确碰撞检测
  */
 
-import { System, InputSystem, MatterPhysicsSystem } from 'you-engine';
-import type { GameEntity, PlayerData, BoomerangData, PowerupData, WallData, FireTrailData, IceTrailData } from '../entities/types';
-import { EntityTags } from '../entities/types';
-import { POWERUP_CONFIG } from '../config/GameConfig';
-import { createRing, spawnParticles, createFloatingText, createParticle } from '../entities/factories';
-import { POWERUP_COLORS, PLAYER_SKINS, GameSettings } from '../config/GameConfig';
-import { i18n } from '../config/i18n';
+import { InputSystem, MatterPhysicsSystem, System } from 'you-engine';
+import { GameSettings, PLAYER_SKINS, POWERUP_COLORS, POWERUP_CONFIG } from '../config/GameConfig';
 import { GameState, Stats } from '../config/GameState';
+import { i18n } from '../config/i18n';
+import {
+  createFloatingText,
+  createParticle,
+  createRing,
+  spawnParticles,
+} from '../entities/factories';
+import type {
+  BoomerangData,
+  FireTrailData,
+  GameEntity,
+  IceTrailData,
+  PlayerData,
+  PowerupData,
+  WallData,
+} from '../entities/types';
+import { EntityTags } from '../entities/types';
 import { DynamicCameraSystem } from './DynamicCameraSystem';
 
 export class CollisionSystem extends System {
@@ -33,27 +45,28 @@ export class CollisionSystem extends System {
   }
 
   onUpdate(_dt: number): void {
-    if (GameState.state !== 'fight' && GameState.state !== 'tutorial' && GameState.state !== 'ko') return;
+    if (GameState.state !== 'fight' && GameState.state !== 'tutorial' && GameState.state !== 'ko')
+      return;
     if (GameState.hitstop > 0) return;
 
     const players = this.engine.world.entities.filter(
       (e): e is GameEntity & { player: PlayerData } =>
-        !!(e.tags?.values.includes(EntityTags.PLAYER)) && e.player !== undefined
+        !!e.tags?.values.includes(EntityTags.PLAYER) && e.player !== undefined
     );
 
     const boomerangs = this.engine.world.entities.filter(
       (e): e is GameEntity & { boomerang: BoomerangData } =>
-        !!(e.tags?.values.includes(EntityTags.BOOMERANG)) && e.boomerang !== undefined
+        !!e.tags?.values.includes(EntityTags.BOOMERANG) && e.boomerang !== undefined
     );
 
     const powerups = this.engine.world.entities.filter(
       (e): e is GameEntity & { powerup: PowerupData } =>
-        !!(e.tags?.values.includes(EntityTags.POWERUP)) && e.powerup !== undefined
+        !!e.tags?.values.includes(EntityTags.POWERUP) && e.powerup !== undefined
     );
 
     const walls = this.engine.world.entities.filter(
       (e): e is GameEntity & { wall: WallData } =>
-        !!(e.tags?.values.includes(EntityTags.WALL)) && e.wall !== undefined
+        !!e.tags?.values.includes(EntityTags.WALL) && e.wall !== undefined
     );
 
     // 磁铁效果
@@ -77,13 +90,13 @@ export class CollisionSystem extends System {
     // 火焰轨迹
     const fireTrails = this.engine.world.entities.filter(
       (e): e is GameEntity & { fireTrail: FireTrailData } =>
-        !!(e.tags?.values.includes(EntityTags.FIRE_TRAIL)) && e.fireTrail !== undefined
+        !!e.tags?.values.includes(EntityTags.FIRE_TRAIL) && e.fireTrail !== undefined
     );
 
     // 冰冻轨迹
     const iceTrails = this.engine.world.entities.filter(
       (e): e is GameEntity & { iceTrail: IceTrailData } =>
-        !!(e.tags?.values.includes(EntityTags.ICE_TRAIL)) && e.iceTrail !== undefined
+        !!e.tags?.values.includes(EntityTags.ICE_TRAIL) && e.iceTrail !== undefined
     );
 
     // 玩家和火焰轨迹碰撞
@@ -93,9 +106,7 @@ export class CollisionSystem extends System {
     this.handleIceTrailCollisions(players, iceTrails);
   }
 
-  private handlePlayerPlayerCollisions(
-    players: Array<GameEntity & { player: PlayerData }>
-  ): void {
+  private handlePlayerPlayerCollisions(players: Array<GameEntity & { player: PlayerData }>): void {
     // 两个玩家之间的碰撞
     for (let i = 0; i < players.length; i++) {
       for (let j = i + 1; j < players.length; j++) {
@@ -187,7 +198,7 @@ export class CollisionSystem extends System {
               colors: ['#fff', '#aaa', '#666'],
               sizeMin: 2,
               sizeMax: 5 + intensity * 3,
-              count: Math.floor(8 + intensity * 12)
+              count: Math.floor(8 + intensity * 12),
             });
 
             // 震动反馈
@@ -195,14 +206,14 @@ export class CollisionSystem extends System {
               this.input.vibrate(p1.player.playerId, {
                 strong: 0.3 + intensity * 0.4,
                 weak: 0.4 + intensity * 0.4,
-                duration: 40 + intensity * 40
+                duration: 40 + intensity * 40,
               });
             }
             if (!p2.player.isAI) {
               this.input.vibrate(p2.player.playerId, {
                 strong: 0.3 + intensity * 0.4,
                 weak: 0.4 + intensity * 0.4,
-                duration: 40 + intensity * 40
+                duration: 40 + intensity * 40,
               });
             }
 
@@ -212,7 +223,7 @@ export class CollisionSystem extends System {
               player2: p2.player.playerId,
               x: collisionX,
               y: collisionY,
-              intensity
+              intensity,
             });
           }
         }
@@ -227,9 +238,12 @@ export class CollisionSystem extends System {
     for (const player of players) {
       if (this.hasPowerup(player.player, 'magnet') && player.player.alive && player.transform) {
         for (const boomerang of boomerangs) {
-          if (boomerang.boomerang.ownerId === player.player.playerId &&
-              !boomerang.boomerang.returning &&
-              boomerang.transform && boomerang.velocity) {
+          if (
+            boomerang.boomerang.ownerId === player.player.playerId &&
+            !boomerang.boomerang.returning &&
+            boomerang.transform &&
+            boomerang.velocity
+          ) {
             const dx = player.transform.x - boomerang.transform.x;
             const dy = player.transform.y - boomerang.transform.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
@@ -262,15 +276,19 @@ export class CollisionSystem extends System {
         const dist = Math.sqrt(dx * dx + dy * dy);
 
         if (dist < bRadius + pRadius) {
-          if (boomerang.boomerang.ownerId === player.player.playerId &&
-              boomerang.boomerang.returning &&
-              player.player.catchCooldown <= 0) {
+          if (
+            boomerang.boomerang.ownerId === player.player.playerId &&
+            boomerang.boomerang.returning &&
+            player.player.catchCooldown <= 0
+          ) {
             // 接住回旋镖
             this.catchBoomerang(player, boomerang);
             this.engine.despawn(boomerang);
             break;
-          } else if (boomerang.boomerang.ownerId !== player.player.playerId ||
-                     boomerang.boomerang.lifetime > 20) {
+          } else if (
+            boomerang.boomerang.ownerId !== player.player.playerId ||
+            boomerang.boomerang.lifetime > 20
+          ) {
             // 检测护盾
             if (this.hasPowerup(player.player, 'shield') && player.player.shieldHits > 0) {
               this.shieldBlock(player, boomerang);
@@ -322,17 +340,23 @@ export class CollisionSystem extends System {
           boomerang.transform.y += collision.normal.y * collision.depth;
 
           // 根据碰撞法线反弹
-          const dot = boomerang.velocity.x * collision.normal.x + boomerang.velocity.y * collision.normal.y;
+          const dot =
+            boomerang.velocity.x * collision.normal.x + boomerang.velocity.y * collision.normal.y;
           boomerang.velocity.x -= 2 * dot * collision.normal.x;
           boomerang.velocity.y -= 2 * dot * collision.normal.y;
 
           boomerang.boomerang.bounces++;
-          if (boomerang.boomerang.bounces >= boomerang.boomerang.maxBounces &&
-              !boomerang.boomerang.returning) {
+          if (
+            boomerang.boomerang.bounces >= boomerang.boomerang.maxBounces &&
+            !boomerang.boomerang.returning
+          ) {
             boomerang.boomerang.returning = true;
           }
 
-          this.engine.emit('boomerang:bounce', { x: boomerang.transform.x, y: boomerang.transform.y });
+          this.engine.emit('boomerang:bounce', {
+            x: boomerang.transform.x,
+            y: boomerang.transform.y,
+          });
         }
       }
     }
@@ -405,7 +429,7 @@ export class CollisionSystem extends System {
   // checkCircleRectCollision 已移除，使用 Matter.js physics.checkCircleShapeCollision 代替
 
   private hasPowerup(player: PlayerData, type: string): boolean {
-    return player.powerups.some(p => p.type === type);
+    return player.powerups.some((p) => p.type === type);
   }
 
   private catchBoomerang(
@@ -415,7 +439,8 @@ export class CollisionSystem extends System {
     player.player.hasBoomerang = true;
 
     // 粒子效果
-    const skin = PLAYER_SKINS[player.player.playerId === 0 ? GameSettings.p1Skin : GameSettings.p2Skin];
+    const skin =
+      PLAYER_SKINS[player.player.playerId === 0 ? GameSettings.p1Skin : GameSettings.p2Skin];
     if (player.transform) {
       this.spawnParticleEffect(player.transform.x, player.transform.y, {
         spread: Math.PI * 2,
@@ -424,7 +449,7 @@ export class CollisionSystem extends System {
         colors: [skin.color1, skin.color2],
         sizeMin: 3,
         sizeMax: 6,
-        count: 8
+        count: 8,
       });
     }
 
@@ -441,7 +466,7 @@ export class CollisionSystem extends System {
   ): void {
     player.player.shieldHits--;
     if (player.player.shieldHits <= 0) {
-      const idx = player.player.powerups.findIndex(p => p.type === 'shield');
+      const idx = player.player.powerups.findIndex((p) => p.type === 'shield');
       if (idx >= 0) player.player.powerups.splice(idx, 1);
     }
 
@@ -462,17 +487,17 @@ export class CollisionSystem extends System {
         colors: ['#0f0', '#fff'],
         sizeMin: 3,
         sizeMax: 6,
-        count: 10
+        count: 10,
       });
     }
 
-    this.engine.emit('boomerang:bounce', { x: player.transform?.x ?? 0, y: player.transform?.y ?? 0 });
+    this.engine.emit('boomerang:bounce', {
+      x: player.transform?.x ?? 0,
+      y: player.transform?.y ?? 0,
+    });
   }
 
-  private killPlayer(
-    victim: GameEntity & { player: PlayerData },
-    killerId: number
-  ): void {
+  private killPlayer(victim: GameEntity & { player: PlayerData }, killerId: number): void {
     victim.player.alive = false;
 
     // 记录击杀
@@ -484,7 +509,8 @@ export class CollisionSystem extends System {
     GameState.playerDied(victim.player.playerId, killerId);
 
     // 获取皮肤（使用多人模式配置）
-    const killerSkinIndex = GameSettings.players?.[killerId]?.skinIndex ?? killerId % PLAYER_SKINS.length;
+    const killerSkinIndex =
+      GameSettings.players?.[killerId]?.skinIndex ?? killerId % PLAYER_SKINS.length;
     const victimSkinIndex = victim.player.skinIndex ?? victim.player.playerId % PLAYER_SKINS.length;
     const killerSkin = PLAYER_SKINS[killerSkinIndex];
     const deathSkin = PLAYER_SKINS[victimSkinIndex];
@@ -502,7 +528,7 @@ export class CollisionSystem extends System {
         colors: [deathSkin.color1, deathSkin.color2, '#fff'],
         sizeMin: 3,
         sizeMax: 15,
-        count: 80
+        count: 80,
       });
 
       // 碎片粒子
@@ -525,7 +551,7 @@ export class CollisionSystem extends System {
     }
     const killerPlayer = (this.engine.world.entities as GameEntity[]).find(
       (e): e is GameEntity & { player: PlayerData } =>
-        !!(e.tags?.values.includes(EntityTags.PLAYER)) &&
+        !!e.tags?.values.includes(EntityTags.PLAYER) &&
         e.player !== undefined &&
         e.player.playerId === killerId
     );
@@ -535,13 +561,15 @@ export class CollisionSystem extends System {
 
     // 短暂慢动作表示击杀
     GameState.slowmo = 0.3;
-    setTimeout(() => { GameState.slowmo = 1; }, 200);
+    setTimeout(() => {
+      GameState.slowmo = 1;
+    }, 200);
 
     this.engine.emit('player:death', {
       victimId: victim.player.playerId,
       killerId: actualKillerId,
       x: victim.transform?.x ?? 0,
-      y: victim.transform?.y ?? 0
+      y: victim.transform?.y ?? 0,
     });
 
     // 触发摄像机击杀特写
@@ -558,9 +586,7 @@ export class CollisionSystem extends System {
     // 获取所有存活玩家
     const alivePlayers = (this.engine.world.entities as GameEntity[]).filter(
       (e): e is GameEntity & { player: PlayerData } =>
-        !!(e.tags?.values.includes(EntityTags.PLAYER)) &&
-        e.player !== undefined &&
-        e.player.alive
+        !!e.tags?.values.includes(EntityTags.PLAYER) && e.player !== undefined && e.player.alive
     );
 
     if (alivePlayers.length <= 1) {
@@ -577,7 +603,7 @@ export class CollisionSystem extends System {
 
     // 检查队伍模式
     const players = GameSettings.players || [];
-    const teamMode = players.some(p => p.teamIndex >= 0);
+    const teamMode = players.some((p) => p.teamIndex >= 0);
 
     if (teamMode) {
       // 收集存活队伍
@@ -601,7 +627,7 @@ export class CollisionSystem extends System {
         if (aliveTeams.size === 1) {
           // 某个队伍获胜
           const winningTeam = [...aliveTeams][0];
-          const teamMember = alivePlayers.find(p => {
+          const teamMember = alivePlayers.find((p) => {
             const config = players[p.player.playerId];
             return config && config.teamIndex === winningTeam;
           });
@@ -611,7 +637,7 @@ export class CollisionSystem extends System {
           }
         } else if (soloAlive === 1) {
           // Solo 玩家获胜
-          const winner = alivePlayers.find(p => {
+          const winner = alivePlayers.find((p) => {
             const config = players[p.player.playerId];
             return !config || config.teamIndex < 0;
           });
@@ -624,7 +650,10 @@ export class CollisionSystem extends System {
   }
 
   /** 触发回合结束 */
-  private triggerRoundEnd(winnerId: number, winnerEntity: (GameEntity & { player: PlayerData }) | null): void {
+  private triggerRoundEnd(
+    winnerId: number,
+    winnerEntity: (GameEntity & { player: PlayerData }) | null
+  ): void {
     // 设置回合胜者
     if (winnerId >= 0) {
       GameState.endRound(winnerId);
@@ -637,14 +666,18 @@ export class CollisionSystem extends System {
     GameState.slowmo = 0.1;
 
     // 放大获胜者
-    if (winnerEntity && winnerEntity.transform) {
+    if (winnerEntity?.transform) {
       GameState.zoomTarget = 1.3;
       // 摄像机聚焦获胜者（可选）
     }
 
     // 逐渐恢复
-    setTimeout(() => { GameState.slowmo = 0.3; }, 500);
-    setTimeout(() => { GameState.slowmo = 0.5; }, 1000);
+    setTimeout(() => {
+      GameState.slowmo = 0.3;
+    }, 500);
+    setTimeout(() => {
+      GameState.slowmo = 0.5;
+    }, 1000);
     setTimeout(() => {
       GameState.slowmo = 1;
       GameState.zoomTarget = 1;
@@ -681,7 +714,7 @@ export class CollisionSystem extends System {
         colors: [POWERUP_COLORS[type], '#fff', '#fff'],
         sizeMin: 4,
         sizeMax: 12,
-        count: 25
+        count: 25,
       });
 
       // 冲击环
@@ -698,20 +731,24 @@ export class CollisionSystem extends System {
       playerId: player.player.playerId,
       type,
       x: powerup.transform?.x ?? 0,
-      y: powerup.transform?.y ?? 0
+      y: powerup.transform?.y ?? 0,
     });
   }
 
-  private spawnParticleEffect(x: number, y: number, config: {
-    angle?: number;
-    spread?: number;
-    speedMin: number;
-    speedMax: number;
-    colors: string[];
-    sizeMin: number;
-    sizeMax: number;
-    count: number;
-  }): void {
+  private spawnParticleEffect(
+    x: number,
+    y: number,
+    config: {
+      angle?: number;
+      spread?: number;
+      speedMin: number;
+      speedMax: number;
+      colors: string[];
+      sizeMin: number;
+      sizeMax: number;
+      count: number;
+    }
+  ): void {
     const particles = spawnParticles(x, y, config.count, {
       angle: config.angle,
       spread: config.spread,
@@ -719,7 +756,7 @@ export class CollisionSystem extends System {
       speedMax: config.speedMax,
       colors: config.colors,
       sizeMin: config.sizeMin,
-      sizeMax: config.sizeMax
+      sizeMax: config.sizeMax,
     });
 
     for (const p of particles) {
@@ -728,10 +765,7 @@ export class CollisionSystem extends System {
   }
 
   /** 冻结玩家 */
-  private freezePlayer(
-    victim: GameEntity & { player: PlayerData },
-    freezerId: number
-  ): void {
+  private freezePlayer(victim: GameEntity & { player: PlayerData }, freezerId: number): void {
     victim.player.frozen = true;
     victim.player.frozenTimer = POWERUP_CONFIG.freezeDuration;
 
@@ -750,7 +784,7 @@ export class CollisionSystem extends System {
         colors: ['#88f', '#aaf', '#fff', '#ccf'],
         sizeMin: 3,
         sizeMax: 8,
-        count: 20
+        count: 20,
       });
 
       // 冰冻环
@@ -776,7 +810,7 @@ export class CollisionSystem extends System {
       victimId: victim.player.playerId,
       freezerId,
       x: victim.transform?.x ?? 0,
-      y: victim.transform?.y ?? 0
+      y: victim.transform?.y ?? 0,
     });
   }
 
@@ -810,10 +844,7 @@ export class CollisionSystem extends System {
   }
 
   /** 燃烧玩家 */
-  private burnPlayer(
-    victim: GameEntity & { player: PlayerData },
-    burnerId: number
-  ): void {
+  private burnPlayer(victim: GameEntity & { player: PlayerData }, burnerId: number): void {
     victim.player.burning = true;
     victim.player.burnTimer = POWERUP_CONFIG.burnDuration;
 
@@ -826,7 +857,7 @@ export class CollisionSystem extends System {
         colors: ['#f44', '#f80', '#ff0', '#fff'],
         sizeMin: 3,
         sizeMax: 8,
-        count: 15
+        count: 15,
       });
 
       // 浮动文字
@@ -848,7 +879,7 @@ export class CollisionSystem extends System {
       victimId: victim.player.playerId,
       burnerId,
       x: victim.transform?.x ?? 0,
-      y: victim.transform?.y ?? 0
+      y: victim.transform?.y ?? 0,
     });
   }
 
