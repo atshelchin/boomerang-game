@@ -8,6 +8,7 @@ import type { CharacterShape } from '../config/GameConfig';
 /**
  * 角色渲染器
  */
+// biome-ignore lint/complexity/noStaticOnlyClass: Utility class with static methods for better organization
 export class CharacterRenderer {
   /**
    * 根据形状绘制角色身体
