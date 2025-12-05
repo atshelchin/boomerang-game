@@ -1,8 +1,11 @@
 /**
  * 游戏实体类型定义
+ *
+ * 注意: GameEntity 的扩展在 src/types/you-engine-extensions.d.ts 中定义
+ * TypeScript 会自动加载该声明文件
  */
 
-import type { GameEntity as BaseEntity } from 'you-engine';
+import type { GameEntity } from 'you-engine';
 
 // 玩家特有组件
 export interface PlayerData {
@@ -166,24 +169,9 @@ export interface PoisonZoneData {
   centerY: number;
 }
 
-// 扩展的游戏实体
-export interface GameEntity extends BaseEntity {
-  // 自定义组件
-  player?: PlayerData;
-  boomerang?: BoomerangData;
-  powerup?: PowerupData;
-  wall?: WallData;
-  particle?: ParticleData;
-  trail?: TrailData;
-  ring?: RingData;
-  floatingText?: FloatingTextData;
-  fireTrail?: FireTrailData;
-  iceTrail?: IceTrailData;
-  terrain?: TerrainData;
-  portal?: PortalData;
-  boulder?: BoulderData;
-  poisonZone?: PoisonZoneData;
-}
+// GameEntity 类型现在通过模块扩展在 you-engine-extensions.d.ts 中定义
+// 这里我们只需要重新导出它以保持向后兼容
+export type { GameEntity };
 
 // 实体类型常量
 export const EntityTags = {
