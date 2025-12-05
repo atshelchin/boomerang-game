@@ -385,7 +385,7 @@ export class GameScene extends Scene {
         pData.isAI = true;
       }
 
-      this.spawn(player);
+      this.engine.spawn(player);
     }
 
     // 兼容旧的 PVE 模式
@@ -484,7 +484,7 @@ export class GameScene extends Scene {
     // 生成预定义的矩形墙体
     for (const w of layout) {
       const wall = createWall(W * w.bx + w.ox, H * w.by + w.oy, w.bw, w.bh);
-      this.spawn(wall);
+      this.engine.spawn(wall);
     }
 
     // 随机添加一些不同形状的障碍物增加趣味性
@@ -499,11 +499,11 @@ export class GameScene extends Scene {
       if (shapeType < 0.5) {
         // 圆形障碍物
         const radius = 30 + Math.random() * 40;
-        this.spawn(createCircleObstacle(x, y, radius));
+        this.engine.spawn(createCircleObstacle(x, y, radius));
       } else {
         // 三角形障碍物
         const size = 60 + Math.random() * 60;
-        this.spawn(createTriangleObstacle(x, y, size));
+        this.engine.spawn(createTriangleObstacle(x, y, size));
       }
     }
   }
@@ -548,7 +548,7 @@ export class GameScene extends Scene {
 
     const type = POWERUP_CONFIG.types[Math.floor(Math.random() * POWERUP_CONFIG.types.length)];
     const powerup = createPowerup(x!, y!, type);
-    this.spawn(powerup);
+    this.engine.spawn(powerup);
   }
 
   private endMatch(): void {

@@ -2,7 +2,30 @@
  * 实体工厂函数
  */
 
-import { createCollider, createSprite, createTransform, createVelocity } from 'you-engine';
+import type { Collider, Sprite, Transform, Velocity } from 'you-engine';
+
+// 简化的组件创建
+function transform(x = 0, y = 0): Transform {
+  return { x, y, rotation: 0, scaleX: 1, scaleY: 1 };
+}
+
+function velocity(x = 0, y = 0): Velocity {
+  return { x, y };
+}
+
+function sprite(opts: Partial<Sprite> = {}): Sprite {
+  return {
+    width: opts.width ?? 32,
+    height: opts.height ?? 32,
+    color: opts.color,
+    alpha: 1,
+    visible: true,
+  };
+}
+
+function collider(type: 'circle' | 'rect', opts: Partial<Collider> = {}): Collider {
+  return { type, ...opts };
+}
 import {
   BOOMERANG_CONFIG,
   GameSettings,
@@ -35,14 +58,14 @@ export function createPlayer(id: number, x: number, y: number): Partial<GameEnti
 
   return {
     id: `player-${id}`,
-    transform: createTransform(x, y),
-    velocity: createVelocity(),
-    sprite: createSprite({
+    transform: transform(x, y),
+    velocity: velocity(),
+    sprite: sprite({
       width: PLAYER_CONFIG.radius * 2,
       height: PLAYER_CONFIG.radius * 2,
       color: skin.color1,
     }),
-    collider: createCollider('circle', { radius: PLAYER_CONFIG.radius }),
+    collider: collider('circle', { radius: PLAYER_CONFIG.radius }),
     tags: { values: [EntityTags.PLAYER] },
     player: {
       playerId: id,
@@ -89,14 +112,14 @@ export function createBoomerang(
   const radius = isBig ? BOOMERANG_CONFIG.bigRadius : BOOMERANG_CONFIG.radius;
 
   return {
-    transform: createTransform(x, y),
+    transform: transform(x, y),
     velocity: { x: vx, y: vy },
-    sprite: createSprite({
+    sprite: sprite({
       width: radius * 2,
       height: radius * 2,
       color: skin.color1,
     }),
-    collider: createCollider('circle', { radius }),
+    collider: collider('circle', { radius }),
     tags: { values: [EntityTags.BOOMERANG] },
     boomerang: {
       ownerId,
@@ -123,13 +146,13 @@ export function createBoomerang(
  */
 export function createPowerup(x: number, y: number, type: string): Partial<GameEntity> {
   return {
-    transform: createTransform(x, y),
-    sprite: createSprite({
+    transform: transform(x, y),
+    sprite: sprite({
       width: POWERUP_CONFIG.radius * 2,
       height: POWERUP_CONFIG.radius * 2,
       color: POWERUP_COLORS[type],
     }),
-    collider: createCollider('circle', { radius: POWERUP_CONFIG.radius }),
+    collider: collider('circle', { radius: POWERUP_CONFIG.radius }),
     tags: { values: [EntityTags.POWERUP] },
     powerup: {
       type,
@@ -149,13 +172,13 @@ export function createWall(
   height: number
 ): Partial<GameEntity> {
   return {
-    transform: createTransform(x + width / 2, y + height / 2),
-    sprite: createSprite({
+    transform: transform(x + width / 2, y + height / 2),
+    sprite: sprite({
       width,
       height,
       color: '#333',
     }),
-    collider: createCollider('rect', { width, height }),
+    collider: collider('rect', { width, height }),
     tags: { values: [EntityTags.WALL] },
     wall: { width, height, shapeType: 'rect' },
   };
@@ -166,13 +189,13 @@ export function createWall(
  */
 export function createCircleObstacle(x: number, y: number, radius: number): Partial<GameEntity> {
   return {
-    transform: createTransform(x, y),
-    sprite: createSprite({
+    transform: transform(x, y),
+    sprite: sprite({
       width: radius * 2,
       height: radius * 2,
       color: '#444',
     }),
-    collider: createCollider('circle', { radius }),
+    collider: collider('circle', { radius }),
     tags: { values: [EntityTags.WALL] },
     wall: { width: radius * 2, height: radius * 2, shapeType: 'circle', radius },
   };
@@ -191,13 +214,13 @@ export function createTriangleObstacle(x: number, y: number, size: number): Part
   ];
 
   return {
-    transform: createTransform(x, y),
-    sprite: createSprite({
+    transform: transform(x, y),
+    sprite: sprite({
       width: size,
       height: h,
       color: '#555',
     }),
-    collider: createCollider('rect', { width: size, height: h }), // 简单碰撞盒
+    collider: collider('rect', { width: size, height: h }), // 简单碰撞盒
     tags: { values: [EntityTags.WALL] },
     wall: { width: size, height: h, shapeType: 'triangle', vertices },
   };
@@ -226,13 +249,13 @@ export function createPolygonObstacle(
   const height = maxY - minY;
 
   return {
-    transform: createTransform(x, y),
-    sprite: createSprite({
+    transform: transform(x, y),
+    sprite: sprite({
       width,
       height,
       color: '#666',
     }),
-    collider: createCollider('rect', { width, height }),
+    collider: collider('rect', { width, height }),
     tags: { values: [EntityTags.WALL] },
     wall: { width, height, shapeType: 'polygon', vertices },
   };
@@ -255,7 +278,7 @@ export function createParticle(
 ): Partial<GameEntity> {
   const life = config.life ?? 35;
   return {
-    transform: createTransform(x, y),
+    transform: transform(x, y),
     velocity: { x: vx, y: vy },
     tags: { values: [EntityTags.PARTICLE] },
     particle: {
@@ -279,7 +302,7 @@ export function createTrail(
   alpha: number = 0.5
 ): Partial<GameEntity> {
   return {
-    transform: createTransform(x, y),
+    transform: transform(x, y),
     tags: { values: [EntityTags.TRAIL] },
     trail: { alpha, radius, color },
   };
@@ -295,7 +318,7 @@ export function createRing(
   maxRadius: number = 120
 ): Partial<GameEntity> {
   return {
-    transform: createTransform(x, y),
+    transform: transform(x, y),
     tags: { values: [EntityTags.RING] },
     ring: {
       radius: 20,
@@ -316,7 +339,7 @@ export function createFloatingText(
   color: string
 ): Partial<GameEntity> {
   return {
-    transform: createTransform(x, y),
+    transform: transform(x, y),
     velocity: { x: 0, y: -2 },
     tags: { values: [EntityTags.FLOATING_TEXT] },
     floatingText: {
@@ -332,9 +355,9 @@ export function createFloatingText(
  */
 export function createFireTrail(x: number, y: number, ownerId: number): Partial<GameEntity> {
   return {
-    transform: createTransform(x, y),
+    transform: transform(x, y),
     tags: { values: [EntityTags.FIRE_TRAIL] },
-    collider: createCollider('circle', { radius: 15 }),
+    collider: collider('circle', { radius: 15 }),
     fireTrail: {
       life: 120, // 2秒
       maxLife: 120,
@@ -349,9 +372,9 @@ export function createFireTrail(x: number, y: number, ownerId: number): Partial<
  */
 export function createIceTrail(x: number, y: number, ownerId: number): Partial<GameEntity> {
   return {
-    transform: createTransform(x, y),
+    transform: transform(x, y),
     tags: { values: [EntityTags.ICE_TRAIL] },
-    collider: createCollider('circle', { radius: 18 }),
+    collider: collider('circle', { radius: 18 }),
     iceTrail: {
       life: 180, // 3秒（比火焰更长）
       maxLife: 180,
@@ -410,7 +433,7 @@ export function createIceTerrain(
   height: number
 ): Partial<GameEntity> {
   return {
-    transform: createTransform(x + width / 2, y + height / 2),
+    transform: transform(x + width / 2, y + height / 2),
     tags: { values: [EntityTags.TERRAIN] },
     terrain: {
       type: 'ice',
@@ -431,7 +454,7 @@ export function createWaterTerrain(
   height: number
 ): Partial<GameEntity> {
   return {
-    transform: createTransform(x + width / 2, y + height / 2),
+    transform: transform(x + width / 2, y + height / 2),
     tags: { values: [EntityTags.TERRAIN] },
     terrain: {
       type: 'water',
@@ -452,9 +475,9 @@ export function createPortal(
   color: string = '#a855f7'
 ): Partial<GameEntity> {
   return {
-    transform: createTransform(x, y),
+    transform: transform(x, y),
     tags: { values: [EntityTags.PORTAL] },
-    collider: createCollider('circle', { radius: 35 }),
+    collider: collider('circle', { radius: 35 }),
     portal: {
       id,
       linkedPortalId,
@@ -479,7 +502,7 @@ export function createBoulderSpawner(
   // 标准化方向
   const len = Math.sqrt(dirX * dirX + dirY * dirY);
   return {
-    transform: createTransform(x, y),
+    transform: transform(x, y),
     tags: { values: [EntityTags.BOULDER] },
     boulder: {
       direction: { x: dirX / len, y: dirY / len },
@@ -503,10 +526,10 @@ export function createRollingBoulder(
   radius: number = 40
 ): Partial<GameEntity> {
   return {
-    transform: createTransform(x, y),
+    transform: transform(x, y),
     velocity: { x: vx, y: vy },
     tags: { values: [EntityTags.BOULDER] },
-    collider: createCollider('circle', { radius }),
+    collider: collider('circle', { radius }),
     boulder: {
       direction: { x: vx, y: vy },
       speed: Math.sqrt(vx * vx + vy * vy),
@@ -529,7 +552,7 @@ export function createPoisonZone(
   shrinkSpeed: number = 0.3
 ): Partial<GameEntity> {
   return {
-    transform: createTransform(centerX, centerY),
+    transform: transform(centerX, centerY),
     tags: { values: [EntityTags.POISON_ZONE] },
     poisonZone: {
       currentRadius: initialRadius,

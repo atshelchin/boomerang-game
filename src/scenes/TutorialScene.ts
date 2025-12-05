@@ -104,7 +104,7 @@ export class TutorialScene extends Scene {
     pData.shapeIndex = 0;
     pData.gamepadIndex = -99; // 键盘
     pData.isAI = false;
-    this.spawn(player);
+    this.engine.spawn(player);
 
     // 创建 AI 对手
     const ai = createPlayer(1, DESIGN_WIDTH - 400, DESIGN_HEIGHT / 2);
@@ -114,7 +114,7 @@ export class TutorialScene extends Scene {
     aiData.shapeIndex = 1;
     aiData.gamepadIndex = -2; // CPU
     aiData.isAI = true;
-    this.spawn(ai);
+    this.engine.spawn(ai);
 
     // 初始化玩家分数系统
     GameState.initPlayerScores(2);
@@ -162,7 +162,7 @@ export class TutorialScene extends Scene {
 
     // 中间的墙
     const wall = createWall(W / 2, H / 2, 80, 200);
-    this.spawn(wall);
+    this.engine.spawn(wall);
   }
 
   private getPlayer(): (GameEntity & { player: PlayerData }) | undefined {
